@@ -1,10 +1,10 @@
 # Progres Pengembangan Kelompok 2 #
 
 ### Anggota Kelompok ###
-1. Mohammad Rizky 
-2. Alvin Ferdiansyah 
-3. Ahmad Aly
-4. Abdullah Assegaf
+1. Mohammad risky saputra (2488010071)
+2. Alvin Perdiansyah dwi putra (2488010019)
+3. Ahmad Aly (2488010069)
+4. Abdullah Assegaf (2488010076)
 
 ### Progres Pengembangan 1 ###
 Tugas PM
@@ -20,10 +20,6 @@ Tugas Member
  - Ahmad Aly
  ![alt text](image.png)
 
-Diskusi Penentuan Tema
-Catatan Diskusi
-- ... (Ahmad Aly)
-
 
 Tugas Member
 1. Accept invitation dan clone project
@@ -31,16 +27,18 @@ Tugas Member
  - Abdullah Assegaf
  ![alt text](image.png)
 
-Diskusi Penentuan Tema
-Catatan Diskusi
-- ... (Abdullah Assegaf)
 
 Tugas Member
 1. Accept invitation dan clone project
 2. Konfirmasi Bukti
- - Alvin Ferdiansyah
+ - Alvin Perdiansyah dwi putra
  ![alt text](image.png)
 
-Diskusi Penentuan Tema
+ # Diskusi Penentuan Tema
 Catatan Diskusi
-- Rental PS (Alvin Ferdiansyah)
+1. Mohammad Rizky(aplikais menu cofee shop)
+2. Alvin Perdiansyah dwi putra (app resep masak)
+3. Ahmad Aly (aplikasi booking arena sport)
+4. Abdullah Assegaf (aplikasi barbershop)
+
+
