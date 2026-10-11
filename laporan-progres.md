@@ -18,7 +18,7 @@ Tugas Member
 1. Accept invitation dan clone project
 2. Konfirmasi Bukti
  - Ahmad Aly
- ![alt text](image.png)
+ 
 
 Diskusi Penentuan Tema
 Catatan Diskusi
@@ -29,17 +29,19 @@ Tugas Member
 1. Accept invitation dan clone project
 2. Konfirmasi Bukti
  - Abdullah Assegaf
- ![alt text](image.png)
+ ![alt text](<Cuplikan layar 2026-10-11 180949.png>)
+![alt text](image.png)
+
 
 Diskusi Penentuan Tema
 Catatan Diskusi
-- ... (Abdullah Assegaf)
+- saya mengajukan 1 tema yaitu aplikasi booking barbershop. dikarenakan rata-rata barbershop masih menggunakan booking via wa (Abdullah Assegaf)
 
 Tugas Member
 1. Accept invitation dan clone project
 2. Konfirmasi Bukti
  - Alvin Ferdiansyah
- ![alt text](image.png)
+
 
 Diskusi Penentuan Tema
 Catatan Diskusi
