@@ -18,18 +18,23 @@ Tugas Member
 1. Accept invitation dan clone project
 2. Konfirmasi Bukti
  - Ahmad Aly
- ![alt text](image.png)
+accept invitation:
+![alt text](image.png) 
+accept invitation:
+![alt text](image-1.png) 
+clone project:
+![alt text](image-2.png)
+
 
 Diskusi Penentuan Tema
 Catatan Diskusi
-- ... (Ahmad Aly)
+- Dari saya, saya mengajukan 1 tema terkait membuat aplikasi Booking arena sport, seperti booking lapangan futsal, badminton, Basket, renang (Ahmad Aly)
 
 
 Tugas Member
 1. Accept invitation dan clone project
 2. Konfirmasi Bukti
  - Abdullah Assegaf
- ![alt text](image.png)
 
 Diskusi Penentuan Tema
 Catatan Diskusi
@@ -39,7 +44,6 @@ Tugas Member
 1. Accept invitation dan clone project
 2. Konfirmasi Bukti
  - Alvin Ferdiansyah
- ![alt text](image.png)
 
 Diskusi Penentuan Tema
 Catatan Diskusi
