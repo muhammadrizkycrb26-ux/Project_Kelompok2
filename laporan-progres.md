@@ -34,6 +34,9 @@ Tugas Member
  - Alvin Perdiansyah dwi putra
  ![alt text](image.png)
 
+ Diskusi Penentuan Tema Catatan Diskusi
+ - saya mengusulkan terkait tema pembuatan app tentang resep masakan ala anak kos  
+
  # Diskusi Penentuan Tema
 Catatan Diskusi
 1. Mohammad Rizky(aplikais menu cofee shop)
