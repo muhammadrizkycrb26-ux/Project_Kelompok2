@@ -18,7 +18,8 @@ Tugas Member
 1. Accept invitation dan clone project
 2. Konfirmasi Bukti
  - Ahmad Aly
- ![alt text](image.png)
+ <img src="accept aly.png">
+ <img src="bukti clone aly.png">
 
 
 Tugas Member
