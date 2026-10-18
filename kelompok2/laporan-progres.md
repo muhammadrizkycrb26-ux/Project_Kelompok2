@@ -29,22 +29,13 @@
 - Dari saya, saya mengajukan 1 tema terkait membuat aplikasi Booking arena sport, seperti booking lapangan futsal, badminton, Basket, renang.
 
 **- Abdullah Assegaf**
-*(Tambahkan gambar bukti accept invitation dan clone project Abdullah di sini)*
+ 
 
-*Catatan Diskusi Tema (Abdullah Assegaf):*
-*(Tambahkan saran tema dari Abdullah di sini)*
 
-<<<<<<< HEAD
- Diskusi Penentuan Tema Catatan Diskusi
- - saya mengusulkan terkait tema pembuatan app tentang resep masakan ala anak kos  
-
- # Diskusi Penentuan Tema
-Catatan Diskusi
-1. Mohammad Rizky(aplikais menu cofee shop)
-2. Alvin Perdiansyah dwi putra (app resep masak)
-=======
 **- Alvin Perdiansyah Dwi Putra**
 ![alt text](<cek branch alvin.png>)
+ Diskusi Penentuan Tema Catatan Diskusi
+ - saya mengusulkan terkait tema pembuatan app tentang resep masakan ala anak kos 
 
 
 ---
@@ -53,6 +44,5 @@ Catatan Diskusi
 **Catatan Diskusi:**
 1. Mohammad Rizky (aplikasi menu coffee shop)
 2. Alvin Ferdiansyah Dwi Putra (app resep masak)
->>>>>>> origin/main
 3. Ahmad Aly (aplikasi booking arena sport)
 4. Abdullah Assegaf (aplikasi barbershop)
