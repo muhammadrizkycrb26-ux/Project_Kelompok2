@@ -1722,3 +1722,173 @@
 {"_e":"metro:client_log","_t":1792671829175,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
 {"_e":"metro:client_log","_t":1792671829295,"level":"warn","data":["[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device."]}
 {"_e":"metro:client_log","_t":1792671829397,"level":"warn","data":["Route \"./store/orders-store.tsx\" is missing the required default export. Ensure a React component is exported as default."]}
+{"_e":"root:init","_t":1792672736880,"format":"v0-jsonl","version":"57.0.31"}
+{"_e":"env:mode","_t":1792672736882,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1792672736887,"mode":"development","files":[],"env":{}}
+{"_e":"devserver:start","_t":1792672737901,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\src\\app","serverComponents":false,"serverActions":false,"serverRendering":true,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1792672738766,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":true,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1792672739433,"plugins":[]}
+{"_e":"metro:instantiate","_t":1792672744373,"atlas":false,"workers":8,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1792672784400,"id":"2","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1792672784402,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:started","_t":1792672784405,"id":"3","platform":"web","environment":"node","entry":"node_modules\\expo\\node_modules\\@expo\\cli\\node_modules\\@expo\\router-server\\node\\render.js"}
+{"_e":"metro:bundling:progress","_t":1792672784406,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672784406,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672784412,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672784412,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672784550,"id":"2","progress":0.09631391200951249,"total":29,"current":9}
+{"_e":"metro:bundling:progress","_t":1792672784550,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672784652,"id":"2","progress":0.09631391200951249,"total":144,"current":28}
+{"_e":"metro:bundling:progress","_t":1792672784652,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672784751,"id":"2","progress":0.13485907625522678,"total":177,"current":65}
+{"_e":"metro:bundling:progress","_t":1792672784751,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672784855,"id":"2","progress":0.16324864809713294,"total":198,"current":80}
+{"_e":"metro:bundling:progress","_t":1792672784855,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672784956,"id":"2","progress":0.20070400000000002,"total":250,"current":112}
+{"_e":"metro:bundling:progress","_t":1792672784956,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672785074,"id":"2","progress":0.20070400000000002,"total":250,"current":112}
+{"_e":"metro:bundling:progress","_t":1792672785074,"id":"3","progress":0.10633270321361059,"total":138,"current":45}
+{"_e":"metro:bundling:progress","_t":1792672785173,"id":"2","progress":0.3372651518074149,"total":322,"current":187}
+{"_e":"metro:bundling:progress","_t":1792672785173,"id":"3","progress":0.10633270321361059,"total":138,"current":45}
+{"_e":"metro:bundling:progress","_t":1792672785276,"id":"2","progress":0.38167813382308596,"total":382,"current":236}
+{"_e":"metro:bundling:progress","_t":1792672785276,"id":"3","progress":0.10633270321361059,"total":138,"current":45}
+{"_e":"metro:bundling:progress","_t":1792672785375,"id":"2","progress":0.38167813382308596,"total":382,"current":236}
+{"_e":"metro:bundling:progress","_t":1792672785375,"id":"3","progress":0.10633270321361059,"total":157,"current":50}
+{"_e":"metro:bundling:progress","_t":1792672785492,"id":"2","progress":0.38167813382308596,"total":382,"current":236}
+{"_e":"metro:bundling:progress","_t":1792672785492,"id":"3","progress":0.12144168962350782,"total":264,"current":92}
+{"_e":"metro:bundling:progress","_t":1792672785593,"id":"2","progress":0.4336047440417195,"total":489,"current":322}
+{"_e":"metro:bundling:progress","_t":1792672785593,"id":"3","progress":0.12144168962350782,"total":264,"current":92}
+{"_e":"metro:bundling:progress","_t":1792672785692,"id":"2","progress":0.5072345479942005,"total":549,"current":391}
+{"_e":"metro:bundling:progress","_t":1792672785692,"id":"3","progress":0.12144168962350782,"total":264,"current":92}
+{"_e":"metro:bundling:progress","_t":1792672785793,"id":"2","progress":0.5072345479942005,"total":549,"current":391}
+{"_e":"metro:bundling:progress","_t":1792672785793,"id":"3","progress":0.16981644728897474,"total":364,"current":150}
+{"_e":"metro:bundling:progress","_t":1792672785892,"id":"2","progress":0.5072345479942005,"total":549,"current":391}
+{"_e":"metro:bundling:progress","_t":1792672785892,"id":"3","progress":0.24776287478131473,"total":446,"current":222}
+{"_e":"metro:bundling:progress","_t":1792672785993,"id":"2","progress":0.5072345479942005,"total":549,"current":391}
+{"_e":"metro:bundling:progress","_t":1792672785993,"id":"3","progress":0.32405690439241125,"total":527,"current":300}
+{"_e":"metro:bundling:progress","_t":1792672786134,"id":"2","progress":0.5642294378729639,"total":651,"current":489}
+{"_e":"metro:bundling:progress","_t":1792672786134,"id":"3","progress":0.32405690439241125,"total":527,"current":300}
+{"_e":"metro:bundling:progress","_t":1792672786234,"id":"2","progress":0.620558100791337,"total":735,"current":579}
+{"_e":"metro:bundling:progress","_t":1792672786234,"id":"3","progress":0.32405690439241125,"total":527,"current":300}
+{"_e":"metro:bundling:progress","_t":1792672786334,"id":"2","progress":0.620558100791337,"total":735,"current":579}
+{"_e":"metro:bundling:progress","_t":1792672786334,"id":"3","progress":0.4191869159639462,"total":607,"current":393}
+{"_e":"metro:bundling:progress","_t":1792672786434,"id":"2","progress":0.620558100791337,"total":735,"current":579}
+{"_e":"metro:bundling:progress","_t":1792672786434,"id":"3","progress":0.4913639520195915,"total":719,"current":504}
+{"_e":"metro:bundling:progress","_t":1792672786534,"id":"2","progress":0.7577925706771861,"total":780,"current":679}
+{"_e":"metro:bundling:progress","_t":1792672786534,"id":"3","progress":0.4913639520195915,"total":719,"current":504}
+{"_e":"metro:bundling:progress","_t":1792672786635,"id":"2","progress":0.7577925706771861,"total":780,"current":679}
+{"_e":"metro:bundling:progress","_t":1792672786635,"id":"3","progress":0.520347301747131,"total":829,"current":598}
+{"_e":"metro:bundling:progress","_t":1792672786736,"id":"2","progress":0.7577925706771861,"total":780,"current":679}
+{"_e":"metro:bundling:progress","_t":1792672786736,"id":"3","progress":0.592615777827292,"total":921,"current":709}
+{"_e":"metro:bundling:progress","_t":1792672786836,"id":"2","progress":0.7577925706771861,"total":922,"current":784}
+{"_e":"metro:bundling:progress","_t":1792672786836,"id":"3","progress":0.592615777827292,"total":921,"current":709}
+{"_e":"metro:bundling:progress","_t":1792672786936,"id":"2","progress":0.7577925706771861,"total":922,"current":784}
+{"_e":"metro:bundling:progress","_t":1792672786936,"id":"3","progress":0.6313286662224697,"total":993,"current":789}
+{"_e":"metro:bundling:progress","_t":1792672787088,"id":"2","progress":0.7577925706771861,"total":922,"current":784}
+{"_e":"metro:bundling:progress","_t":1792672787088,"id":"3","progress":0.7834977128106144,"total":1071,"current":948}
+{"_e":"metro:bundling:progress","_t":1792672787188,"id":"2","progress":0.8623694593224448,"total":1065,"current":989}
+{"_e":"metro:bundling:progress","_t":1792672787188,"id":"3","progress":0.7834977128106144,"total":1071,"current":948}
+{"_e":"metro:bundling:progress","_t":1792672787289,"id":"2","progress":0.8623694593224448,"total":1065,"current":989}
+{"_e":"metro:bundling:progress","_t":1792672787289,"id":"3","progress":0.9079972345679013,"total":1125,"current":1072}
+{"_e":"metro:bundling:progress","_t":1792672787388,"id":"2","progress":0.8623694593224448,"total":1065,"current":989}
+{"_e":"metro:bundling:progress","_t":1792672787388,"id":"3","progress":0.9079972345679013,"total":1146,"current":1092}
+{"_e":"metro:bundling:progress","_t":1792672787488,"id":"2","progress":0.8623694593224448,"total":1065,"current":989}
+{"_e":"metro:bundling:progress","_t":1792672787488,"id":"3","progress":0.9217955961155422,"total":1178,"current":1131}
+{"_e":"metro:bundling:progress","_t":1792672787588,"id":"2","progress":0.8623694593224448,"total":1065,"current":989}
+{"_e":"metro:bundling:progress","_t":1792672787588,"id":"3","progress":0.9258951580404361,"total":1271,"current":1223}
+{"_e":"metro:bundling:progress","_t":1792672787688,"id":"2","progress":0.8623694593224448,"total":1065,"current":989}
+{"_e":"metro:bundling:progress","_t":1792672787688,"id":"3","progress":0.9578361122115423,"total":1314,"current":1286}
+{"_e":"metro:bundling:progress","_t":1792672787806,"id":"2","progress":0.8623694593224448,"total":1065,"current":989}
+{"_e":"metro:bundling:progress","_t":1792672787806,"id":"3","progress":0.999,"total":1322,"current":1322}
+{"_e":"metro:bundling:done","_t":1792672787870,"id":"3","total":1322,"ms":3464.604}
+{"_e":"metro:bundling:progress","_t":1792672787871,"id":"2","progress":0.8623694593224448,"total":1065,"current":989}
+{"_e":"metro:bundling:done","_t":1792672789003,"id":"2","total":1065,"ms":4601.703}
+{"_e":"metro:bundling:started","_t":1792672863324,"id":"5","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1792672863324,"id":"5","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:started","_t":1792672863325,"id":"6","platform":"web","environment":"node","entry":"node_modules\\expo\\node_modules\\@expo\\cli\\node_modules\\@expo\\router-server\\node\\render.js"}
+{"_e":"metro:bundling:progress","_t":1792672863325,"id":"5","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672863325,"id":"6","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672863423,"id":"6","total":1,"ms":97.6835}
+{"_e":"metro:bundling:progress","_t":1792672863423,"id":"5","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672864061,"id":"5","total":1,"ms":736.3863}
+{"_e":"metro:bundling:started","_t":1792672864145,"id":"7","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1792672864145,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672864151,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672864251,"id":"7","progress":0.1279661577103576,"total":246,"current":88}
+{"_e":"metro:bundling:progress","_t":1792672864353,"id":"7","progress":0.22928389462781,"total":378,"current":181}
+{"_e":"metro:bundling:progress","_t":1792672864453,"id":"7","progress":0.3955230712890625,"total":512,"current":322}
+{"_e":"metro:bundling:progress","_t":1792672864553,"id":"7","progress":0.519740400216333,"total":645,"current":465}
+{"_e":"metro:bundling:progress","_t":1792672864695,"id":"7","progress":0.7114159841626281,"total":741,"current":625}
+{"_e":"metro:bundling:progress","_t":1792672864797,"id":"7","progress":0.7426796219181705,"total":861,"current":742}
+{"_e":"metro:bundling:progress","_t":1792672864896,"id":"7","progress":0.7886119823264119,"total":1045,"current":928}
+{"_e":"metro:bundling:progress","_t":1792672864996,"id":"7","progress":0.8676607424803052,"total":1153,"current":1074}
+{"_e":"metro:bundling:progress","_t":1792672865096,"id":"7","progress":0.9536385259936633,"total":1279,"current":1249}
+{"_e":"metro:bundling:done","_t":1792672865263,"id":"7","total":1279,"ms":1118.0863}
+{"_e":"metro:client_log","_t":1792672865859,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1792672865861,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1792672865923,"level":"warn","data":["[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device."]}
+{"_e":"metro:client_log","_t":1792672865978,"level":"warn","data":["Route \"./store/orders-store.tsx\" is missing the required default export. Ensure a React component is exported as default."]}
+{"_e":"metro:bundling:started","_t":1792672874580,"id":"a","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1792672874580,"id":"a","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:started","_t":1792672874580,"id":"b","platform":"web","environment":"node","entry":"node_modules\\expo\\node_modules\\@expo\\cli\\node_modules\\@expo\\router-server\\node\\render.js"}
+{"_e":"metro:bundling:progress","_t":1792672874580,"id":"a","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672874580,"id":"b","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672874643,"id":"b","total":1,"ms":62.6995}
+{"_e":"metro:bundling:progress","_t":1792672874643,"id":"a","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672875269,"id":"a","total":1,"ms":688.8916}
+{"_e":"metro:bundling:started","_t":1792672876081,"id":"e","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1792672876082,"id":"e","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:started","_t":1792672876082,"id":"f","platform":"web","environment":"node","entry":"node_modules\\expo\\node_modules\\@expo\\cli\\node_modules\\@expo\\router-server\\node\\render.js"}
+{"_e":"metro:bundling:progress","_t":1792672876082,"id":"e","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672876082,"id":"f","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672876233,"id":"f","total":1,"ms":150.5622}
+{"_e":"metro:bundling:progress","_t":1792672876233,"id":"e","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672876820,"id":"e","total":1,"ms":738.5694}
+{"_e":"metro:bundling:started","_t":1792672876874,"id":"g","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1792672876874,"id":"g","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672877011,"id":"g","total":1,"ms":136.4656}
+{"_e":"metro:client_log","_t":1792672877410,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1792672877435,"level":"warn","data":["[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device."]}
+{"_e":"metro:client_log","_t":1792672877458,"level":"warn","data":["Route \"./store/orders-store.tsx\" is missing the required default export. Ensure a React component is exported as default."]}
+{"_e":"metro:bundling:started","_t":1792672901127,"id":"i","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1792672901127,"id":"i","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:started","_t":1792672901127,"id":"j","platform":"web","environment":"node","entry":"node_modules\\expo\\node_modules\\@expo\\cli\\node_modules\\@expo\\router-server\\node\\render.js"}
+{"_e":"metro:bundling:progress","_t":1792672901128,"id":"i","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672901128,"id":"j","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672901209,"id":"j","total":1,"ms":81.9499}
+{"_e":"metro:bundling:progress","_t":1792672901210,"id":"i","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672901878,"id":"i","total":1,"ms":750.8223}
+{"_e":"metro:bundling:started","_t":1792672901923,"id":"k","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1792672901923,"id":"k","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672902042,"id":"k","total":1,"ms":118.6283}
+{"_e":"metro:client_log","_t":1792672902612,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1792672902634,"level":"warn","data":["[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device."]}
+{"_e":"metro:client_log","_t":1792672902665,"level":"warn","data":["Route \"./store/orders-store.tsx\" is missing the required default export. Ensure a React component is exported as default."]}
+{"_e":"metro:bundling:started","_t":1792672937669,"id":"n","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1792672937670,"id":"n","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:started","_t":1792672937670,"id":"o","platform":"web","environment":"node","entry":"node_modules\\expo\\node_modules\\@expo\\cli\\node_modules\\@expo\\router-server\\node\\render.js"}
+{"_e":"metro:bundling:progress","_t":1792672937670,"id":"n","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672937670,"id":"o","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672937756,"id":"o","total":1,"ms":86.2352}
+{"_e":"metro:bundling:progress","_t":1792672937756,"id":"n","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672938359,"id":"n","total":1,"ms":689.1772}
+{"_e":"metro:bundling:started","_t":1792672938423,"id":"p","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1792672938424,"id":"p","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672938572,"id":"p","total":1,"ms":148.7938}
+{"_e":"metro:client_log","_t":1792672938958,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1792672938983,"level":"warn","data":["[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device."]}
+{"_e":"metro:client_log","_t":1792672939009,"level":"warn","data":["Route \"./store/orders-store.tsx\" is missing the required default export. Ensure a React component is exported as default."]}
+{"_e":"metro:bundling:started","_t":1792672944495,"id":"s","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1792672944496,"id":"s","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:started","_t":1792672944496,"id":"t","platform":"web","environment":"node","entry":"node_modules\\expo\\node_modules\\@expo\\cli\\node_modules\\@expo\\router-server\\node\\render.js"}
+{"_e":"metro:bundling:progress","_t":1792672944496,"id":"s","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792672944496,"id":"t","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672944591,"id":"t","total":1,"ms":94.9119}
+{"_e":"metro:bundling:progress","_t":1792672944591,"id":"s","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672945220,"id":"s","total":1,"ms":724.8719}
+{"_e":"metro:bundling:started","_t":1792672945270,"id":"u","platform":"web","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1792672945270,"id":"u","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792672945405,"id":"u","total":1,"ms":134.8092}
+{"_e":"metro:client_log","_t":1792672945941,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1792672945968,"level":"warn","data":["[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device."]}
+{"_e":"metro:client_log","_t":1792672945993,"level":"warn","data":["Route \"./store/orders-store.tsx\" is missing the required default export. Ensure a React component is exported as default."]}
