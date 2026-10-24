@@ -8,27 +8,27 @@ Aplikasi Corte Barbershop dikembangkan menggunakan React Native dan Expo dengan 
 
 Fitur utama aplikasi
 
-![alt text](home.gif)
+![alt text](dokumentasi/home.gif)
 1. Home
 
 Menampilkan pengenalan Corte Barbershop, jam operasional, katalog layanan, dan akses cepat menuju halaman booking.
 
-![alt text](booking.gif)
+![alt text](dokumentasi/booking.gif)
 2. Booking layanan
 
 Pelanggan mengisi nama, memilih layanan, menentukan jadwal kunjungan, dan melihat harga sebelum membuat pesanan.
 
-![alt text](shop.gif)
+![alt text](dokumentasi/shop.gif)
 3. Shop
 
 Menyediakan produk seperti pomade, sampo, serum, hair tonic, dan produk styling lain, lengkap dengan harga, stok, serta keranjang belanja.
 
-![alt text](pesanan.gif)
+![alt text](dokumentasi/pesanan.gif)
 4. Pesanan
 
 Menampilkan riwayat booking dan pembelian produk, total pesanan, status pesanan, serta opsi pembatalan untuk pesanan yang masih menunggu proses.
 
-![alt text](profil.gif)
+![alt text](dokumentasi/profil.gif)
 5. Profil
 
 Menyediakan tampilan informasi pelanggan, pengeditan nama dan nomor HP, serta pengaturan sederhana dan informasi aplikasi.
@@ -40,5 +40,3 @@ Teknologi yang digunakan
 - Expo — membantu proses pengembangan dan menjalankan aplikasi.
 - Expo Router — mengatur navigasi antarlaman.
 - TypeScript — menambahkan tipe data pada kode aplikasi.
-
-
