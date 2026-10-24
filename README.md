@@ -1,57 +1,49 @@
-# Welcome to your Expo app 👋
+# Corte Barbershop
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Corte Barbershop adalah aplikasi mobile yang dirancang untuk memudahkan pelanggan dalam mengakses layanan barbershop secara praktis. Aplikasi ini menyediakan informasi berbagai layanan pangkas rambut dan perawatan, lengkap dengan deskripsi serta harga, sehingga pelanggan dapat memilih layanan yang sesuai dengan kebutuhan mereka.
 
-## Get started
+Selain pemesanan jadwal layanan, aplikasi ini menyediakan toko produk perawatan rambut yang dilengkapi katalog produk, informasi harga dan stok, serta keranjang belanja. Pengguna juga dapat melihat daftar pesanan, memantau status pesanan, dan mengelola informasi profil melalui satu aplikasi.
 
-1. Install dependencies
+Aplikasi Corte Barbershop dikembangkan menggunakan React Native dan Expo dengan navigasi yang terdiri dari lima menu utama, yaitu Home, Booking, Shop, Pesanan, dan Profil. Dengan antarmuka yang sederhana dan modern, aplikasi ini diharapkan dapat memberikan pengalaman yang lebih mudah dan nyaman bagi pelanggan dalam memesan layanan serta membeli produk perawatan rambut.
 
-   ```bash
-   npm install
-   ```
+## Fitur utama aplikasi
 
-2. Start the app
+![alt text](dokumentasi/home.gif)
 
-   ```bash
-   npx expo start
-   ```
+### 1. Home
 
-In the output, you'll find options to open the app in a
+Menampilkan pengenalan Corte Barbershop, jam operasional, katalog layanan, dan akses cepat menuju halaman booking.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+![alt text](dokumentasi/booking.gif)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 2. Booking layanan
 
-## Get a fresh project
+Pelanggan mengisi nama, memilih layanan, menentukan jadwal kunjungan, dan melihat harga sebelum membuat pesanan.
 
-When you're ready, run:
+![alt text](dokumentasi/shop.gif)
 
-```bash
-npm run reset-project
-```
+### 3. Shop
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Menyediakan produk seperti pomade, sampo, serum, hair tonic, dan produk styling lain, lengkap dengan harga, stok, serta keranjang belanja.
 
-### Other setup steps
+![alt text](dokumentasi/pesanan.gif)
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+### 4. Pesanan
 
-## Learn more
+Menampilkan riwayat booking dan pembelian produk, total pesanan, status pesanan, serta opsi pembatalan untuk pesanan yang masih menunggu proses.
 
-To learn more about developing your project with Expo, look at the following resources:
+![alt text](dokumentasi/profil.gif)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 5. Profil
 
-## Join the community
+Menyediakan tampilan informasi pelanggan, pengeditan nama dan nomor HP, serta pengaturan sederhana dan informasi aplikasi.
 
-Join our community of developers creating universal apps.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 
+## Teknologi yang digunakan
+- React Native — membangun antarmuka aplikasi mobile.
+- Expo — membantu proses pengembangan dan menjalankan aplikasi.
+- Expo Router — mengatur navigasi antarlaman.
+- TypeScript — menambahkan tipe data pada kode aplikasi.
+
+============
