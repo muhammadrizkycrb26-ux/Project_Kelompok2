@@ -40,3 +40,5 @@ Teknologi yang digunakan
 - Expo — membantu proses pengembangan dan menjalankan aplikasi.
 - Expo Router — mengatur navigasi antarlaman.
 - TypeScript — menambahkan tipe data pada kode aplikasi.
+
+============
