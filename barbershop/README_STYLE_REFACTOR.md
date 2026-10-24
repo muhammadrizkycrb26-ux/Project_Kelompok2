@@ -19,3 +19,4 @@ Setiap screen mengimpor style-nya sendiri, misalnya `import styles from "./booki
 4. Jalankan `npx expo start`.
 
 Catatan: dependensi tidak disertakan dalam ZIP; instalasi dilakukan melalui `npm install`.
+ ahmdaly
