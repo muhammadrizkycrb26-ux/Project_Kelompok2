@@ -161,6 +161,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
   },
+  
   searchBox: {
     marginHorizontal: 20,
     flexDirection: "row",
@@ -169,17 +170,19 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     paddingHorizontal: 14,
     marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#EAE4DC",
   },
   searchIcon: {
     color: COLORS.orange,
     fontSize: 25,
   },
   searchInput: {
-    flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 10,
-    fontSize: 12,
-    color: COLORS.dark,
+  flex: 1,
+  paddingVertical: 14,
+  paddingHorizontal: 10,
+  fontSize: 12,
+  color: COLORS.dark,
   },
   categoryList: {
     paddingHorizontal: 20,

@@ -269,16 +269,18 @@ const styles = StyleSheet.create({
     marginTop: 18,
     marginBottom: 8,
   },
+  
   input: {
     height: 47,
     borderWidth: 1,
-    borderColor: C.border,
+    borderColor: "#EAE4DC",
     borderRadius: 12,
     paddingHorizontal: 12,
-    color: C.dark,
+    color: "#242321",
     backgroundColor: "#FCFBF9",
     fontSize: 13,
   },
+
   modalActions: {
     flexDirection: "row",
     justifyContent: "flex-end",

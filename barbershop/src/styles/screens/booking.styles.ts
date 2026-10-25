@@ -140,16 +140,18 @@ const styles = StyleSheet.create({
     color: COLORS.dark,
     marginBottom: 9,
   },
+  
   textInput: {
     height: 49,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: "#EAE4DC",
     backgroundColor: "#FCFBF9",
     borderRadius: 12,
     paddingHorizontal: 14,
     fontSize: 13,
-    color: COLORS.dark,
+    color: "#242321",
   },
+
   fieldDescription: {
     fontSize: 10,
     color: COLORS.muted,
