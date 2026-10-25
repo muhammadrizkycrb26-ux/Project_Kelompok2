@@ -1,4 +1,7 @@
 import styles from "../../styles/screens/orders.styles";
+import AppButton from "@/components/atomic/AppButton";
+import CategoryChip from "@/components/atomic/CategoryChip";
+import SectionHeader from "@/components/atomic/SectionHeader";
 import { useMemo, useState } from "react";
 import {
   Alert,
@@ -235,13 +238,13 @@ export default function OrdersScreen() {
           </Text>
 
           {item.status === "Menunggu Proses" && (
-            <TouchableOpacity
-              style={styles.cancelButton}
+            <AppButton
+              title="Batalkan"
               onPress={() => handleCancel(item)}
-              activeOpacity={0.8}
+              style={[styles.cancelButton, { marginTop: 0, paddingVertical: 9, paddingHorizontal: 14 }]}
             >
               <Text style={styles.cancelButtonText}>Batalkan</Text>
-            </TouchableOpacity>
+            </AppButton>
           )}
         </View>
       </View>
@@ -289,10 +292,7 @@ export default function OrdersScreen() {
 
         {latestBooking && (
           <View style={styles.latestSection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Booking Terbaru</Text>
-              <Text style={styles.sectionCaption}>Booking kamu</Text>
-            </View>
+            <SectionHeader title="Booking Terbaru" trailing="Booking kamu" style={{ marginHorizontal: 0, marginTop: 0 }} />
 
             <View style={styles.bookingCard}>
               <View style={styles.bookingTop}>
@@ -343,36 +343,20 @@ export default function OrdersScreen() {
         )}
 
         <View style={styles.historySection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Riwayat Pesanan</Text>
-            <Text style={styles.sectionCaption}>
-              {filteredOrders.length} pesanan
-            </Text>
-          </View>
+          <SectionHeader title="Riwayat Pesanan" trailing={`${filteredOrders.length} pesanan`} style={{ marginHorizontal: 0, marginTop: 0 }} />
 
           <View style={styles.filterContainer}>
             {(["Semua", "Booking", "Produk"] as FilterType[]).map((filter) => {
               const active = selectedFilter === filter;
 
               return (
-                <TouchableOpacity
+                <CategoryChip
                   key={filter}
+                  label={filter}
+                  selected={active}
                   onPress={() => setSelectedFilter(filter)}
-                  style={[
-                    styles.filterButton,
-                    active && styles.filterButtonActive,
-                  ]}
-                  activeOpacity={0.8}
-                >
-                  <Text
-                    style={[
-                      styles.filterText,
-                      active && styles.filterTextActive,
-                    ]}
-                  >
-                    {filter}
-                  </Text>
-                </TouchableOpacity>
+                  style={{ marginRight: 8, paddingHorizontal: 14, paddingVertical: 9 }}
+                />
               );
             })}
           </View>

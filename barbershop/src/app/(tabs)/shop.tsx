@@ -1,4 +1,7 @@
 import styles from "../../styles/screens/shop.styles";
+import AppButton from "@/components/atomic/AppButton";
+import CategoryChip from "@/components/atomic/CategoryChip";
+import SectionHeader from "@/components/atomic/SectionHeader";
 import { formatRupiah, products, type Product } from "@/data/products";
 import { useMemo, useState } from "react";
 import {
@@ -203,11 +206,15 @@ export default function ShopScreen() {
           <Text style={styles.productPrice}>{formatRupiah(item.price)}</Text>
           <Text style={styles.stockText}>Stok: {item.stock}</Text>
 
-          <Pressable style={styles.addButton} onPress={() => addToCart(item)}>
+          <AppButton
+            title={quantity > 0 ? `+ Tambah (${quantity})` : "+ Keranjang"}
+            onPress={() => addToCart(item)}
+            style={[styles.addButton, { marginTop: 10, paddingVertical: 10, paddingHorizontal: 12 }]}
+          >
             <Text style={styles.addButtonText}>
               {quantity > 0 ? `+ Tambah (${quantity})` : "+ Keranjang"}
             </Text>
-          </Pressable>
+          </AppButton>
         </View>
       </View>
     );
@@ -303,12 +310,11 @@ export default function ShopScreen() {
       </View>
 
       <View style={styles.sectionHeader}>
-        <View>
-          <Text style={styles.sectionTitle}>Katalog Produk</Text>
-          <Text style={styles.sectionSubtitle}>
-            {filteredProducts.length} produk ditemukan
-          </Text>
-        </View>
+        <SectionHeader
+          title="Katalog Produk"
+          description={`${filteredProducts.length} produk ditemukan`}
+          style={{ marginHorizontal: 0, marginTop: 0, marginBottom: 0, flex: 1 }}
+        />
         <Pressable onPress={() => setCartVisible(true)}>
           <Text style={styles.viewCartText}>Keranjang →</Text>
         </Pressable>
@@ -319,23 +325,13 @@ export default function ShopScreen() {
           const active = category === item;
 
           return (
-            <Pressable
+            <CategoryChip
               key={item}
-              style={[
-                styles.categoryButton,
-                active && styles.categoryButtonActive,
-              ]}
+              label={item}
+              selected={active}
               onPress={() => setCategory(item)}
-            >
-              <Text
-                style={[
-                  styles.categoryText,
-                  active && styles.categoryTextActive,
-                ]}
-              >
-                {item}
-              </Text>
-            </Pressable>
+              style={{ marginRight: 8, paddingHorizontal: 16, paddingVertical: 10 }}
+            />
           );
         })}
       </View>
@@ -453,11 +449,15 @@ export default function ShopScreen() {
                   </View>
                 </ScrollView>
 
-                <Pressable style={styles.primaryButton} onPress={openCheckout}>
+                <AppButton
+                  title={`Lanjut Checkout · ${formatRupiah(subtotal)}`}
+                  onPress={openCheckout}
+                  style={[styles.primaryButton, { alignSelf: "stretch", marginTop: 14 }]}
+                >
                   <Text style={styles.primaryButtonText}>
                     Lanjut Checkout · {formatRupiah(subtotal)}
                   </Text>
-                </Pressable>
+                </AppButton>
               </>
             )}
           </View>
@@ -565,9 +565,13 @@ export default function ShopScreen() {
               </View>
             </ScrollView>
 
-            <Pressable style={styles.primaryButton} onPress={confirmCheckout}>
+            <AppButton
+              title="Konfirmasi Pesanan"
+              onPress={confirmCheckout}
+              style={[styles.primaryButton, { alignSelf: "stretch", marginTop: 14 }]}
+            >
               <Text style={styles.primaryButtonText}>Konfirmasi Pesanan</Text>
-            </Pressable>
+            </AppButton>
 
             <Pressable
               style={styles.secondaryButton}

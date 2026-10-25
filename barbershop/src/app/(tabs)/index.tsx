@@ -12,6 +12,9 @@ import {
 } from "react-native";
 
 import { getServicePriceLabel, services } from "@/data/services";
+import AppButton from "@/components/atomic/AppButton";
+import CategoryChip from "@/components/atomic/CategoryChip";
+import SectionHeader from "@/components/atomic/SectionHeader";
 
 const COLORS = {
   background: "#F7F4EF",
@@ -72,12 +75,11 @@ export default function HomeScreen() {
             Temukan layanan grooming yang sesuai dengan gaya kamu.
           </Text>
 
-          <Pressable
-            style={styles.primaryButton}
+          <AppButton
+            title="Booking Sekarang →"
             onPress={() => router.push("/booking")}
-          >
-            <Text style={styles.primaryButtonText}>Booking Sekarang →</Text>
-          </Pressable>
+            style={styles.primaryButton}
+          />
 
           <Text style={styles.heroNote}>GROOMING • STYLE • CONFIDENCE</Text>
         </View>
@@ -97,16 +99,12 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View style={styles.sectionHeader}>
-          <View>
-            <Text style={styles.sectionTitle}>Layanan Kami</Text>
-            <Text style={styles.mutedText}>
-              Rawat diri, tampil percaya diri.
-            </Text>
-          </View>
-
-          <Text style={styles.serviceCount}>{services.length} layanan</Text>
-        </View>
+        <SectionHeader
+          title="Layanan Kami"
+          description="Rawat diri, tampil percaya diri."
+          trailing={`${services.length} layanan`}
+          style={styles.sectionHeader}
+        />
 
         <View style={styles.searchBox}>
           <Text style={styles.searchIcon}>⌕</Text>
@@ -125,23 +123,13 @@ export default function HomeScreen() {
           contentContainerStyle={styles.categoryList}
         >
           {categories.map((category) => (
-            <Pressable
+            <CategoryChip
               key={category}
+              label={category}
+              selected={selectedCategory === category}
               onPress={() => setSelectedCategory(category)}
-              style={[
-                styles.categoryChip,
-                selectedCategory === category && styles.categoryChipActive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.categoryText,
-                  selectedCategory === category && styles.categoryTextActive,
-                ]}
-              >
-                {category}
-              </Text>
-            </Pressable>
+              style={undefined}
+            />
           ))}
         </ScrollView>
 

@@ -1,4 +1,6 @@
 import styles from "../../styles/screens/profile.styles";
+import AppButton from "@/components/atomic/AppButton";
+import SectionHeader from "@/components/atomic/SectionHeader";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
@@ -154,9 +156,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Pengaturan */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Pengaturan</Text>
-        </View>
+        <SectionHeader title="Pengaturan" style={{ marginHorizontal: 0, marginTop: 28 }} />
 
         <View style={styles.card}>
           <Pressable
@@ -200,16 +200,14 @@ export default function ProfileScreen() {
         </View>
 
         {/* Logout */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.logoutButton,
-            pressed && styles.pressed,
-          ]}
+        <AppButton
+          title="Logout"
           onPress={() => setDialog("logout")}
+          style={[styles.logoutButton, { alignSelf: "stretch", marginTop: 22 }]}
         >
           <Text style={styles.logoutIcon}>⇥</Text>
           <Text style={styles.logoutText}>Logout</Text>
-        </Pressable>
+        </AppButton>
 
         <Text style={styles.footerText}>BARBERSHOP EXPERIENCE · 2026</Text>
       </ScrollView>
@@ -258,9 +256,9 @@ export default function ProfileScreen() {
                 <Text style={styles.secondaryText}>Batal</Text>
               </Pressable>
 
-              <Pressable style={styles.primaryButton} onPress={saveProfile}>
+              <AppButton title="Simpan" onPress={saveProfile} style={[styles.primaryButton, { marginTop: 0 }]}>
                 <Text style={styles.primaryText}>Simpan</Text>
-              </Pressable>
+              </AppButton>
             </View>
           </View>
         </View>

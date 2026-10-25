@@ -1,4 +1,6 @@
 import styles from "../../styles/screens/booking.styles";
+import AppButton from "@/components/atomic/AppButton";
+import SectionHeader from "@/components/atomic/SectionHeader";
 import { formatRupiah, services, type Service } from "@/data/services";
 import { StatusBar } from "expo-status-bar";
 import { useMemo, useState } from "react";
@@ -512,7 +514,7 @@ export default function BookingScreen() {
 
         <View style={styles.summaryCard}>
           <Text style={styles.summaryEyebrow}>BOOKING SUMMARY</Text>
-          <Text style={styles.summaryTitle}>Ringkasan booking</Text>
+          <SectionHeader title="Ringkasan booking" style={{ marginHorizontal: 0, marginTop: 0, marginBottom: 18 }} />
 
           <View style={styles.summaryLine}>
             <Text style={styles.summaryLabel}>Pelanggan</Text>
@@ -565,15 +567,13 @@ export default function BookingScreen() {
             </Text>
           </View>
 
-          <Pressable
+          <AppButton
+            title="Konfirmasi Booking →"
             onPress={handleBooking}
-            style={({ pressed }) => [
-              styles.bookingButton,
-              pressed && styles.buttonPressed,
-            ]}
+            style={[styles.bookingButton, { alignSelf: "stretch", marginTop: 16 }]}
           >
             <Text style={styles.bookingButtonText}>Konfirmasi Booking →</Text>
-          </Pressable>
+          </AppButton>
 
           <Text style={styles.disclaimer}>
             Booking disimpan ke riwayat lokal aplikasi. Data belum disimpan ke
