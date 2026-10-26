@@ -47,3 +47,12 @@ Menyediakan tampilan informasi pelanggan, pengeditan nama dan nomor HP, serta pe
 - TypeScript — menambahkan tipe data pada kode aplikasi.
 
 ============
+
+cara penggunaan
+1. git clone "https://github.com/muhammadrizkycrb26-ux/Project_Kelompok2.git"
+2. cd .....\barbershop
+3. npm install
+4. npx expo start
+
+cara ubah pallete:
+akses file pada ......\barbershop\src\constants\palette.ts
