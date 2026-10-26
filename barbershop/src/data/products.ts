@@ -9,6 +9,9 @@ export type Product = {
   popular?: boolean;
 };
 
+export const productCategories = ["Semua", "Styling", "Perawatan"] as const;
+export type ProductCategory = (typeof productCategories)[number];
+
 export const products: Product[] = [
   {
     id: "P001",
@@ -86,11 +89,3 @@ export const products: Product[] = [
     emoji: "🫧",
   },
 ];
-
-export const formatRupiah = (value: number): string => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(value);
-};

@@ -2,25 +2,21 @@
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
 import type { ColorValue } from 'react-native';
-const COLORS = {
-  muted: '#8C8781',
-  orange: '#C9824A',
-  white: '#FFFFFF',
-  border: '#EAE4DC',
-};
+import { Palette } from '@/constants/palette';
+
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.orange,
-        tabBarInactiveTintColor: COLORS.muted,
+        tabBarActiveTintColor: Palette.accent,
+        tabBarInactiveTintColor: Palette.muted,
         tabBarHideOnKeyboard: true,
 
         tabBarStyle: {
-          backgroundColor: COLORS.white,
-          borderTopColor: COLORS.border,
+          backgroundColor: Palette.surface,
+          borderTopColor: Palette.border,
           height: 60,
           paddingTop: 5,
           paddingBottom: 5,

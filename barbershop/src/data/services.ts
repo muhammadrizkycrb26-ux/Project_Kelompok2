@@ -1,3 +1,4 @@
+import { formatRupiah } from '@/utils/format';
 
 export type Service = {
   id: string;
@@ -11,6 +12,9 @@ export type Service = {
     medium: number;
   };
 };
+
+export const serviceCategories = ['Semua', 'Haircut', 'Treatment', 'Coloring', 'Styling'] as const;
+export type ServiceCategory = (typeof serviceCategories)[number];
 
 export const services: Service[] = [
   {
@@ -102,10 +106,6 @@ export const services: Service[] = [
     image: 'https://images.unsplash.com/photo-1590540179852-2110a54f813a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D',
   },
 ];
-
-export function formatRupiah(price: number): string {
-  return `Rp${price.toLocaleString('id-ID')}`;
-}
 
 export function getServicePriceLabel(service: Service): string {
   if (service.prices) {
