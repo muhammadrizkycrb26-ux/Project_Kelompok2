@@ -1,4 +1,5 @@
 import styles from "../../styles/screens/profile.styles";
+import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
@@ -12,6 +13,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { getCurrentUser, signOutLocalAccount } from "@/data/auth";
 
 const C = {
   background: "#F7F4EF",
@@ -27,9 +29,9 @@ const C = {
 type DialogType = "logout" | "info" | null;
 
 export default function ProfileScreen() {
-  // Data contoh profil. Ganti dengan data dari sistem login jika tersedia.
-  const [name, setName] = useState("Tanu Hasyim");
-  const [phone, setPhone] = useState("081234567890");
+  const currentUser = getCurrentUser();
+  const [name, setName] = useState(currentUser?.name ?? "Tanu Hasyim");
+  const [phone, setPhone] = useState(currentUser?.phone ?? "081234567890");
 
   const [editVisible, setEditVisible] = useState(false);
   const [draftName, setDraftName] = useState(name);
@@ -74,12 +76,8 @@ export default function ProfileScreen() {
 
   function confirmLogout() {
     setDialog(null);
-
-    // Simulasi logout karena autentikasi belum dihubungkan.
-    showMessage(
-      "Logout belum terhubung",
-      "Tampilan profil ini belum memakai sistem login. Hubungkan fungsi logout ke autentikasi aplikasi agar sesi pengguna benar-benar berakhir.",
-    );
+    signOutLocalAccount();
+    router.replace("/login");
   }
 
   return (

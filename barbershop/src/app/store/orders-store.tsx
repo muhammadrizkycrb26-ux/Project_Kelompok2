@@ -13,6 +13,7 @@ export type BookingOrder = {
   serviceName: string;
   date: string;
   time: string;
+  durationMinutes: number;
   price: number;
   status: OrderStatus;
   createdAt: string;
@@ -62,6 +63,10 @@ export function useOrders() {
 export function addBookingOrder(
   data: Omit<BookingOrder, "id" | "type" | "status" | "createdAt">,
 ) {
+  if (!isBookingSlotAvailable(data.date, data.time, data.durationMinutes)) {
+    return null;
+  }
+
   const order: BookingOrder = {
     ...data,
     id: `BK-${Date.now()}`,
@@ -74,6 +79,30 @@ export function addBookingOrder(
   notify();
 
   return order;
+}
+
+function timeToMinutes(time: string) {
+  const [hour, minute] = time.split(".").map(Number);
+  return hour * 60 + minute;
+}
+
+export function isBookingSlotAvailable(
+  date: string,
+  time: string,
+  durationMinutes: number,
+) {
+  const start = timeToMinutes(time);
+  const end = start + durationMinutes;
+
+  return !orders.some((order) => {
+    if (order.type !== "booking" || order.date !== date || order.status === "Batal") {
+      return false;
+    }
+
+    const existingStart = timeToMinutes(order.time);
+    const existingEnd = existingStart + order.durationMinutes;
+    return start < existingEnd && existingStart < end;
+  });
 }
 
 export function addProductOrder(

@@ -1,7 +1,7 @@
 import styles from "../../styles/screens/booking.styles";
 import { formatRupiah, services, type Service } from "@/data/services";
 import { StatusBar } from "expo-status-bar";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Platform,
@@ -11,7 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { addBookingOrder } from "../store/orders-store";
+import { addBookingOrder, isBookingSlotAvailable, useOrders } from "../store/orders-store";
 
 const COLORS = {
   background: "#F7F4EF",
@@ -23,20 +23,10 @@ const COLORS = {
   softOrange: "#F5E7D9",
 };
 
-const TIME_SLOTS = [
-  "09.00",
-  "10.00",
-  "11.00",
-  "12.00",
-  "13.00",
-  "14.00",
-  "15.00",
-  "16.00",
-  "17.00",
-  "18.00",
-  "19.00",
-  "20.00",
-];
+const OPENING_MINUTES = 9 * 60;
+const CLOSING_MINUTES = 21 * 60;
+const SLOT_INTERVAL_MINUTES = 30;
+const ESTIMATED_SERVICE_MINUTES = 60;
 
 type HairLength = "short" | "medium";
 
@@ -102,6 +92,36 @@ function formatLongDate(dateKey: string): string {
   });
 }
 
+function formatTime(minutes: number): string {
+  const hour = String(Math.floor(minutes / 60)).padStart(2, "0");
+  const minute = String(minutes % 60).padStart(2, "0");
+  return `${hour}.${minute}`;
+}
+
+function getAvailableSlots(dateKey: string, now: number): string[] {
+  const todayKey = getLocalDateKey(new Date(now));
+  const currentDate = new Date(now);
+  const currentMinutes = currentDate.getHours() * 60 + currentDate.getMinutes();
+  const earliestTodaySlot = Math.ceil(
+    (currentMinutes + SLOT_INTERVAL_MINUTES) / SLOT_INTERVAL_MINUTES,
+  ) * SLOT_INTERVAL_MINUTES;
+
+  const firstSlot = dateKey === todayKey
+    ? Math.max(OPENING_MINUTES, earliestTodaySlot)
+    : OPENING_MINUTES;
+  const slots: string[] = [];
+
+  for (
+    let start = firstSlot;
+    start + ESTIMATED_SERVICE_MINUTES <= CLOSING_MINUTES;
+    start += SLOT_INTERVAL_MINUTES
+  ) {
+    slots.push(formatTime(start));
+  }
+
+  return slots;
+}
+
 function showMessage(title: string, message: string) {
   if (Platform.OS === "web") {
     window.alert(`${title}\n\n${message}`);
@@ -112,6 +132,13 @@ function showMessage(title: string, message: string) {
 
 export default function BookingScreen() {
   const dateOptions = useMemo(() => getDateOptions(), []);
+  const orders = useOrders();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   const [customerName, setCustomerName] = useState("");
   const [selectedServiceId, setSelectedServiceId] = useState(
@@ -134,6 +161,17 @@ export default function BookingScreen() {
       ? selectedService.prices[hairLength]
       : (selectedService.price ?? 0)
     : 0;
+
+  const availableSlots = useMemo(
+    () => getAvailableSlots(selectedDate, now).filter((time) =>
+      isBookingSlotAvailable(
+        formatLongDate(selectedDate),
+        time,
+        ESTIMATED_SERVICE_MINUTES,
+      ),
+    ),
+    [selectedDate, now, orders],
+  );
 
   function selectService(service: Service) {
     setSelectedServiceId(service.id);
@@ -170,11 +208,28 @@ export default function BookingScreen() {
       return;
     }
 
+    if (
+      !availableSlots.includes(selectedTime) ||
+      !isBookingSlotAvailable(
+        formatLongDate(selectedDate),
+        selectedTime,
+        ESTIMATED_SERVICE_MINUTES,
+      )
+    ) {
+      setSelectedTime("");
+      showMessage(
+        "Jadwal sudah tidak tersedia",
+        "Silakan pilih waktu lain. Pilihan jadwal diperbarui mengikuti waktu sekarang dan booking yang sudah tercatat.",
+      );
+      return;
+    }
+
     const bookingData = {
       customerName: customerName.trim(),
       serviceName: selectedService.name,
       date: formatLongDate(selectedDate),
       time: selectedTime,
+      durationMinutes: ESTIMATED_SERVICE_MINUTES,
       price: selectedPrice,
     };
 
@@ -194,8 +249,15 @@ export default function BookingScreen() {
         const savedOrder = addBookingOrder(bookingData);
 
         if (!savedOrder) {
-          throw new Error("Booking tidak berhasil dibuat.");
+          setSelectedTime("");
+          showMessage(
+            "Jadwal baru saja diambil",
+            "Silakan pilih slot waktu lain yang masih tersedia.",
+          );
+          return;
         }
+
+        setSelectedTime("");
 
         showMessage(
           "Booking berhasil",
@@ -487,7 +549,7 @@ export default function BookingScreen() {
 
         <View style={styles.card}>
           <View style={styles.timeGrid}>
-            {TIME_SLOTS.map((time) => {
+            {availableSlots.map((time) => {
               const active = time === selectedTime;
 
               return (
@@ -504,9 +566,14 @@ export default function BookingScreen() {
             })}
           </View>
 
+          {availableSlots.length === 0 ? (
+            <Text style={styles.fieldDescription}>
+              Tidak ada slot tersisa untuk tanggal ini. Silakan pilih tanggal lain.
+            </Text>
+          ) : null}
+
           <Text style={styles.fieldDescription}>
-            Slot di atas merupakan pilihan waktu awal. Ketersediaan aktual perlu
-            diperiksa melalui sistem booking.
+            Slot diperbarui mengikuti waktu sekarang dan booking di aplikasi. Setiap layanan memakai estimasi durasi {ESTIMATED_SERVICE_MINUTES} menit untuk simulasi.
           </Text>
         </View>
 
@@ -576,8 +643,7 @@ export default function BookingScreen() {
           </Pressable>
 
           <Text style={styles.disclaimer}>
-            Booking disimpan ke riwayat lokal aplikasi. Data belum disimpan ke
-            database permanen.
+            Ketersediaan ini hanya tersinkron di aplikasi yang sedang terbuka. Belum tersambung ke database atau perangkat lain.
           </Text>
         </View>
 
