@@ -1,5 +1,7 @@
-import styles from "../../styles/screens/shop.styles";
-import { formatRupiah, products, type Product } from "@/data/products";
+import baseStyles from "../../styles/screens/shop.styles";
+import { useDarkMode, useThemedStyles } from "@/data/theme-store";
+import { formatRupiah, type Product } from "@/data/products";
+import { useProducts } from "@/data/catalog-store";
 import { useMemo, useState } from "react";
 import {
   Alert,
@@ -44,6 +46,11 @@ const productImages: Record<string, string> = {
 };
 
 export default function ShopScreen() {
+  const styles = useThemedStyles(baseStyles);
+  const darkMode = useDarkMode();
+  // ✅ BARU: ambil produk dari store (berubah otomatis kalau admin CRUD)
+  const products = useProducts();
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<Category>("Semua");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -66,7 +73,7 @@ export default function ShopScreen() {
 
       return matchKeyword && matchCategory;
     });
-  }, [search, category]);
+  }, [search, category, products]); // ✅ BARU: tambah `products`
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce(
@@ -181,7 +188,10 @@ export default function ShopScreen() {
             />
           ) : (
             <View style={styles.imageFallback}>
-              <Text style={styles.fallbackText}>Foto produk</Text>
+              {/* ✅ BARU: produk baru dari admin tampil pakai emoji */}
+              <Text style={[styles.fallbackText, { fontSize: 44 }]}>
+                {item.emoji}
+              </Text>
             </View>
           )}
 
@@ -213,42 +223,58 @@ export default function ShopScreen() {
     );
   };
 
-  const renderCartItem = (item: CartItem) => (
-    <View key={item.product.id} style={styles.cartItem}>
-      <Image
-        source={{ uri: productImages[item.product.id] }}
-        style={styles.cartImage}
-        resizeMode="contain"
-      />
+  const renderCartItem = (item: CartItem) => {
+    const cartImageUrl = productImages[item.product.id];
 
-      <View style={styles.cartItemInfo}>
-        <Text style={styles.cartItemName}>{item.product.name}</Text>
-        <Text style={styles.cartItemPrice}>
-          {formatRupiah(item.product.price)}
-        </Text>
+    return (
+      <View key={item.product.id} style={styles.cartItem}>
+        {/* ✅ BARU: fallback emoji kalau produk tidak punya foto */}
+        {cartImageUrl ? (
+          <Image
+            source={{ uri: cartImageUrl }}
+            style={styles.cartImage}
+            resizeMode="contain"
+          />
+        ) : (
+          <View
+            style={[
+              styles.cartImage,
+              { alignItems: "center", justifyContent: "center" },
+            ]}
+          >
+            <Text style={{ fontSize: 28 }}>{item.product.emoji}</Text>
+          </View>
+        )}
 
-        <View style={styles.quantityRow}>
-          <Pressable
-            style={styles.quantityButton}
-            onPress={() => changeQuantity(item.product.id, -1)}
-          >
-            <Text style={styles.quantityButtonText}>−</Text>
-          </Pressable>
-          <Text style={styles.quantityText}>{item.quantity}</Text>
-          <Pressable
-            style={styles.quantityButton}
-            onPress={() => changeQuantity(item.product.id, 1)}
-          >
-            <Text style={styles.quantityButtonText}>+</Text>
-          </Pressable>
+        <View style={styles.cartItemInfo}>
+          <Text style={styles.cartItemName}>{item.product.name}</Text>
+          <Text style={styles.cartItemPrice}>
+            {formatRupiah(item.product.price)}
+          </Text>
+
+          <View style={styles.quantityRow}>
+            <Pressable
+              style={styles.quantityButton}
+              onPress={() => changeQuantity(item.product.id, -1)}
+            >
+              <Text style={styles.quantityButtonText}>−</Text>
+            </Pressable>
+            <Text style={styles.quantityText}>{item.quantity}</Text>
+            <Pressable
+              style={styles.quantityButton}
+              onPress={() => changeQuantity(item.product.id, 1)}
+            >
+              <Text style={styles.quantityButtonText}>+</Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
 
-      <Text style={styles.cartItemTotal}>
-        {formatRupiah(item.product.price * item.quantity)}
-      </Text>
-    </View>
-  );
+        <Text style={styles.cartItemTotal}>
+          {formatRupiah(item.product.price * item.quantity)}
+        </Text>
+      </View>
+    );
+  };
 
   const listHeader = (
     <View>
@@ -344,7 +370,10 @@ export default function ShopScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
+      <StatusBar
+        barStyle={darkMode ? "light-content" : "dark-content"}
+        backgroundColor={darkMode ? "#151413" : C.bg}
+      />
 
       {/* Satu FlatList sebagai scroll utama untuk seluruh halaman */}
       <FlatList
@@ -586,5 +615,3 @@ export default function ShopScreen() {
     </SafeAreaView>
   );
 }
-
-

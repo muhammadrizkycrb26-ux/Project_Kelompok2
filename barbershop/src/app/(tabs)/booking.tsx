@@ -1,4 +1,5 @@
-import styles from "../../styles/screens/booking.styles";
+import baseStyles from "../../styles/screens/booking.styles";
+import { useDarkMode, useThemedStyles } from "@/data/theme-store";
 import { formatRupiah, services, type Service } from "@/data/services";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
@@ -131,6 +132,8 @@ function showMessage(title: string, message: string) {
 }
 
 export default function BookingScreen() {
+  const styles = useThemedStyles(baseStyles);
+  const darkMode = useDarkMode();
   const dateOptions = useMemo(() => getDateOptions(), []);
   const orders = useOrders();
   const [now, setNow] = useState(() => Date.now());
@@ -303,7 +306,7 @@ export default function BookingScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={darkMode ? "light" : "dark"} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}

@@ -1,4 +1,6 @@
-import styles from "../../styles/screens/index.styles";
+import baseStyles from "../../styles/screens/index.styles";
+import { useDarkMode, useThemedStyles } from "@/data/theme-store";
+import { useCurrentUser } from "@/data/auth";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useMemo, useState } from "react";
@@ -11,7 +13,9 @@ import {
   View,
 } from "react-native";
 
-import { getServicePriceLabel, services } from "@/data/services";
+// ✅ 1. `services` tidak diimpor lagi dari sini, diganti hook di bawah
+import { getServicePriceLabel } from "@/data/services";
+import { useServices } from "@/data/catalog-store";
 
 const COLORS = {
   background: "#F7F4EF",
@@ -25,6 +29,13 @@ const COLORS = {
 const categories = ["Semua", "Haircut", "Treatment", "Coloring", "Styling"];
 
 export default function HomeScreen() {
+  // ✅ 2. ambil layanan dari store (ikut berubah kalau admin CRUD)
+  const styles = useThemedStyles(baseStyles);
+  const darkMode = useDarkMode();
+  const services = useServices();
+  const currentUser = useCurrentUser();
+  // sama persis dengan logika avatar di halaman Profil
+  const initial = currentUser?.name.trim().charAt(0).toUpperCase() || "U";
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
 
@@ -39,11 +50,11 @@ export default function HomeScreen() {
 
       return matchesCategory && matchesSearch;
     });
-  }, [search, selectedCategory]);
+  }, [search, selectedCategory, services]); // ✅ 3. tambah `services`
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+        <StatusBar style={darkMode ? "light" : "dark"} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -59,7 +70,7 @@ export default function HomeScreen() {
             style={styles.avatar}
             onPress={() => router.push("/profile")}
           >
-            <Text style={styles.avatarText}>TN</Text>
+            <Text style={styles.avatarText}>{initial}</Text>
           </Pressable>
         </View>
 
@@ -212,5 +223,3 @@ export default function HomeScreen() {
     </View>
   );
 }
-
-

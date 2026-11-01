@@ -1,4 +1,5 @@
-import styles from "../../styles/screens/profile.styles";
+import baseStyles from "../../styles/screens/profile.styles";
+import { setDarkMode, useDarkMode, useThemedStyles } from "@/data/theme-store";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
@@ -13,7 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { getCurrentUser, signOutLocalAccount } from "@/data/auth";
+import { getCurrentUser, signOutLocalAccount, updateCurrentUser } from "@/data/auth";
 
 const C = {
   background: "#F7F4EF",
@@ -29,6 +30,8 @@ const C = {
 type DialogType = "logout" | "info" | null;
 
 export default function ProfileScreen() {
+  const styles = useThemedStyles(baseStyles);
+  const darkMode = useDarkMode();
   const currentUser = getCurrentUser();
   const [name, setName] = useState(currentUser?.name ?? "Tanu Hasyim");
   const [phone, setPhone] = useState(currentUser?.phone ?? "081234567890");
@@ -39,8 +42,6 @@ export default function ProfileScreen() {
 
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
-
   const [dialog, setDialog] = useState<DialogType>(null);
 
   function openEditProfile() {
@@ -59,6 +60,10 @@ export default function ProfileScreen() {
       showMessage("Nomor HP wajib diisi", "Silakan masukkan nomor HP.");
       return;
     }
+    updateCurrentUser({ name: draftName.trim(), phone: draftPhone.trim() });
+    setName(draftName.trim());
+    setPhone(draftPhone.trim());
+    setEditVisible(false);
 
     setName(draftName.trim());
     setPhone(draftPhone.trim());
@@ -82,7 +87,8 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={darkMode ? "light" : "dark"} />
+      
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -167,7 +173,7 @@ export default function ProfileScreen() {
             <View style={styles.menuContent}>
               <Text style={styles.menuTitle}>Preferensi aplikasi</Text>
               <Text style={styles.menuSubtitle}>
-                Notifikasi dan tampilan aplikasi
+                  Ubah tampilan aplikasi menjadi gelap
               </Text>
             </View>
             <Text style={styles.chevron}>›</Text>
@@ -312,7 +318,6 @@ export default function ProfileScreen() {
 
             <Text style={styles.hint}>
               Pengaturan ini masih bersifat lokal dan belum tersimpan permanen.
-              Mode gelap belum mengubah tema seluruh halaman.
             </Text>
 
             <Pressable
