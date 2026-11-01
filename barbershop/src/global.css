@@ -1,0 +1,24 @@
+
+/* Hilangkan outline bawaan browser pada input */
+input,
+textarea,
+select {
+  outline: none !important;
+  outline-style: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Border input ketika sedang fokus */
+input:focus,
+textarea:focus,
+select:focus,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none !important;
+  outline-style: none !important;
+  box-shadow: none !important;
+  border-color: #C9824A !important;
+}
