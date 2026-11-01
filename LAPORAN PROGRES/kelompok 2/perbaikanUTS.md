@@ -21,3 +21,17 @@ Halaman Home digunakan sebagai dashboard pengguna. Dari halaman ini, pengguna da
 ### Penutup
 
 Perbaikan ini merupakan langkah langkah menuju penyempurnaan aplikasi Corte Barbershop dari sisi alur akses dan tampilan sesuai kebutuhan pengguna dan admin. Pengembangan selanjutnya dapat mencakup penyimpanan data permanen, autentikasi yang terhubung ke backend, serta penyelesaian dan penggabungan dashboard admin ke branch utama.
+
+---
+
+### 1. Tampilan Registrasi Akun
+
+<img src="registrasi akun.gif">
+
+### 2. Tampilan Login Users
+
+<img src="login akun users.gif">
+
+### 3. Tampilan Dashboard Admin
+
+<img src="login admin.gif">
