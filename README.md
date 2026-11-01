@@ -8,8 +8,13 @@ Aplikasi Corte Barbershop dikembangkan menggunakan React Native dan Expo dengan 
 
 ## Fitur utama aplikasi
 
-### login & register
 ![alt text](dokumentasi/login_register.gif)
+
+### login & register
+
+    Register adalah proses awal di mana seorang pengguna baru membuat akun agar identitasnya tersimpan dan dikenali oleh sistem.
+
+    Login adalah proses verifikasi untuk mencocokkan identitas pengguna yang ingin masuk ke dalam sistem dengan data yang sudah terdaftar sebelumnya.
 
 
 ![alt text](dokumentasi/home.gif)
