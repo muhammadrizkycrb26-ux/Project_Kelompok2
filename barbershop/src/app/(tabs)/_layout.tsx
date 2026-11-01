@@ -1,7 +1,8 @@
-
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
 import type { ColorValue } from 'react-native';
+import { useDarkMode } from '@/data/theme-store';
+
 const COLORS = {
   muted: '#8C8781',
   orange: '#C9824A',
@@ -10,17 +11,19 @@ const COLORS = {
 };
 
 export default function TabLayout() {
+  const dark = useDarkMode();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: COLORS.orange,
-        tabBarInactiveTintColor: COLORS.muted,
+        tabBarInactiveTintColor: dark ? '#A8A29B' : COLORS.muted,
         tabBarHideOnKeyboard: true,
 
         tabBarStyle: {
-          backgroundColor: COLORS.white,
-          borderTopColor: COLORS.border,
+          backgroundColor: dark ? '#211F1D' : COLORS.white,
+          borderTopColor: dark ? '#37332F' : COLORS.border,
           height: 60,
           paddingTop: 5,
           paddingBottom: 5,
@@ -42,9 +45,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => (
-            <TabIcon symbol="⌂" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <TabIcon symbol="⌂" color={color} />,
         }}
       />
 
@@ -52,9 +53,7 @@ export default function TabLayout() {
         name="booking"
         options={{
           title: 'Booking',
-          tabBarIcon: ({ color }) => (
-            <TabIcon symbol="◷" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <TabIcon symbol="◷" color={color} />,
         }}
       />
 
@@ -62,9 +61,7 @@ export default function TabLayout() {
         name="shop"
         options={{
           title: 'Shop',
-          tabBarIcon: ({ color }) => (
-            <TabIcon symbol="◇" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <TabIcon symbol="◇" color={color} />,
         }}
       />
 
@@ -72,9 +69,7 @@ export default function TabLayout() {
         name="orders"
         options={{
           title: 'Pesanan',
-          tabBarIcon: ({ color }) => (
-            <TabIcon symbol="▤" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <TabIcon symbol="▤" color={color} />,
         }}
       />
 
@@ -82,9 +77,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profil',
-          tabBarIcon: ({ color }) => (
-            <TabIcon symbol="●" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <TabIcon symbol="●" color={color} />,
         }}
       />
     </Tabs>

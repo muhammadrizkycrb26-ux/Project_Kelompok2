@@ -1,4 +1,5 @@
-import styles from "../../styles/screens/orders.styles";
+import baseStyles from "../../styles/screens/orders.styles";
+import { useDarkMode, useThemedStyles } from "@/data/theme-store";
 import { useMemo, useState } from "react";
 import {
   Alert,
@@ -75,6 +76,8 @@ function getStatusColor(status: OrderStatus) {
 }
 
 export default function OrdersScreen() {
+  const styles = useThemedStyles(baseStyles);
+  const darkMode = useDarkMode();
   const orders = useOrders();
 
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("Semua");
@@ -250,7 +253,10 @@ export default function OrdersScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
+      <StatusBar
+        barStyle={darkMode ? "light-content" : "dark-content"}
+        backgroundColor={darkMode ? "#151413" : C.bg}
+      />
 
       <View style={styles.header}>
         <View>
@@ -413,6 +419,7 @@ export default function OrdersScreen() {
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(baseStyles);
   return (
     <View style={styles.detailRow}>
       <Text style={styles.detailLabel}>{label}</Text>

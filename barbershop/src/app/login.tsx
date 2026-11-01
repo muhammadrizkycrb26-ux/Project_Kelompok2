@@ -1,7 +1,7 @@
 import { router, Link } from "expo-router";
 import { useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { consumeRegistrationNotice, signInLocalAccount } from "@/data/auth";
+import { consumeRegistrationNotice, signInAdmin, signInLocalAccount } from "@/data/auth";
 
 const C = { bg: "#F7F4EF", ink: "#242321", muted: "#8C8781", orange: "#C9824A", white: "#FFFFFF", border: "#EAE4DC", danger: "#B42318", green: "#287A52" };
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -23,6 +23,10 @@ export default function LoginScreen() {
     setSubmitted(true);
     setMessage("");
     if (!canSubmit) return;
+    if (signInAdmin(email, password)) {
+      router.replace("/admin");
+      return;
+    }
     const account = signInLocalAccount(email, password);
     if (!account) {
       setMessage("Email atau kata sandi belum cocok. Jika belum punya akun, silakan daftar dulu.");
