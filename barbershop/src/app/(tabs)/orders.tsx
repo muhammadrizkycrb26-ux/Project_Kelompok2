@@ -17,7 +17,7 @@ import {
   type Order,
   type OrderStatus,
   useOrders,
-} from "../store/orders-store";
+} from "../../data/orders-store";
 
 const C = {
   bg: "#F7F4EF",

@@ -16,7 +16,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { addProductOrder, type PaymentMethod } from "../store/orders-store";
+import { addProductOrder, type PaymentMethod } from "../../data/orders-store";
 
 const C = {
   bg: "#F7F4EF",

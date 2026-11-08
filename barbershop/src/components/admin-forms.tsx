@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -10,8 +11,15 @@ import {
   View,
 } from "react-native";
 
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
+
 import AppText from "@/components/app-text";
-import type { ProductInput, ServiceInput } from "@/data/catalog-store";
+import {
+  getServiceError,
+  type ProductInput,
+  type ServiceInput,
+} from "@/data/catalog-store";
 import type { Product } from "@/data/products";
 import type { Service } from "@/data/services";
 import styles, { C } from "../styles/screens/admin.styles";
@@ -29,6 +37,7 @@ function ModalShell({
   subtitle,
   onClose,
   onSave,
+  saving,
   children,
 }: {
   visible: boolean;
@@ -36,10 +45,16 @@ function ModalShell({
   subtitle: string;
   onClose: () => void;
   onSave: () => void;
+  saving?: boolean;
   children: ReactNode;
 }) {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <KeyboardAvoidingView
         style={styles.modalBackdrop}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -48,7 +63,10 @@ function ModalShell({
           <AppText style={styles.modalTitle}>{title}</AppText>
           <AppText style={styles.modalSubtitle}>{subtitle}</AppText>
 
-          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             {children}
           </ScrollView>
 
@@ -56,8 +74,19 @@ function ModalShell({
             <Pressable style={styles.ghostButton} onPress={onClose}>
               <AppText style={styles.ghostButtonText}>Batal</AppText>
             </Pressable>
-            <Pressable style={[styles.primaryButton, { flex: 1, alignItems: "center" }]} onPress={onSave}>
-              <AppText style={styles.primaryButtonText}>Simpan</AppText>
+            <Pressable
+              style={[
+                styles.primaryButton,
+                { flex: 1, alignItems: "center", opacity: saving ? 0.5 : 1 },
+              ]}
+              onPress={onSave}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator color={C.white} />
+              ) : (
+                <AppText style={styles.primaryButtonText}>Simpan</AppText>
+              )}
             </Pressable>
           </View>
         </View>
@@ -126,7 +155,12 @@ function ChipSelect({
             onPress={() => onChange(option)}
             style={[styles.formChip, value === option && styles.formChipActive]}
           >
-            <AppText style={[styles.formChipText, value === option && styles.formChipTextActive]}>
+            <AppText
+              style={[
+                styles.formChipText,
+                value === option && styles.formChipTextActive,
+              ]}
+            >
               {option}
             </AppText>
           </Pressable>
@@ -196,7 +230,8 @@ export function ProductFormModal({
 
   const errors = {
     name: name.trim().length < 3 ? "Nama minimal 3 karakter." : "",
-    description: description.trim().length < 5 ? "Deskripsi minimal 5 karakter." : "",
+    description:
+      description.trim().length < 5 ? "Deskripsi minimal 5 karakter." : "",
     price: !price || Number(price) <= 0 ? "Harga harus lebih dari 0." : "",
     stock: stock === "" ? "Stok wajib diisi (boleh 0)." : "",
   };
@@ -219,17 +254,62 @@ export function ProductFormModal({
     <ModalShell
       visible={visible}
       title={product ? "Edit Produk" : "Tambah Produk"}
-      subtitle={product ? `ID ${product.id}` : "Produk baru akan tampil di halaman Shop."}
+      subtitle={
+        product
+          ? `ID ${product.id}`
+          : "Produk baru akan tampil di halaman Shop."
+      }
       onClose={onClose}
       onSave={save}
     >
-      <Field label="Nama produk" value={name} onChangeText={setName} placeholder="Contoh: Sea Salt Spray" error={submitted ? errors.name : ""} />
-      <ChipSelect label="Kategori" options={PRODUCT_CATEGORIES} value={category} onChange={setCategory} />
-      <Field label="Deskripsi" value={description} onChangeText={setDescription} placeholder="Deskripsi singkat produk" multiline error={submitted ? errors.description : ""} />
-      <Field label="Harga (Rp)" value={price} onChangeText={(v) => setPrice(digitsOnly(v))} placeholder="45000" numeric error={submitted ? errors.price : ""} />
-      <Field label="Stok" value={stock} onChangeText={(v) => setStock(digitsOnly(v))} placeholder="10" numeric error={submitted ? errors.stock : ""} />
-      <Field label="Emoji ikon" value={emoji} onChangeText={setEmoji} placeholder="🧴" />
-      <SwitchRow label="Tandai sebagai populer" value={popular} onChange={setPopular} />
+      <Field
+        label="Nama produk"
+        value={name}
+        onChangeText={setName}
+        placeholder="Contoh: Sea Salt Spray"
+        error={submitted ? errors.name : ""}
+      />
+      <ChipSelect
+        label="Kategori"
+        options={PRODUCT_CATEGORIES}
+        value={category}
+        onChange={setCategory}
+      />
+      <Field
+        label="Deskripsi"
+        value={description}
+        onChangeText={setDescription}
+        placeholder="Deskripsi singkat produk"
+        multiline
+        error={submitted ? errors.description : ""}
+      />
+      <Field
+        label="Harga (Rp)"
+        value={price}
+        onChangeText={(v) => setPrice(digitsOnly(v))}
+        placeholder="45000"
+        numeric
+        error={submitted ? errors.price : ""}
+      />
+      <Field
+        label="Stok"
+        value={stock}
+        onChangeText={(v) => setStock(digitsOnly(v))}
+        placeholder="10"
+        numeric
+        error={submitted ? errors.stock : ""}
+      />
+      <Field
+        label="Emoji ikon"
+        value={emoji}
+        onChangeText={setEmoji}
+        placeholder="🧴"
+      />
+      <SwitchRow
+        label="Tandai sebagai populer"
+        value={popular}
+        onChange={setPopular}
+      />
     </ModalShell>
   );
 }
@@ -245,7 +325,7 @@ export function ServiceFormModal({
   visible: boolean;
   service: Service | null;
   onClose: () => void;
-  onSubmit: (input: ServiceInput) => void;
+  onSubmit: (input: ServiceInput, photoUri?: string | null) => Promise<boolean>;
 }) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState(SERVICE_CATEGORIES[0]);
@@ -256,6 +336,9 @@ export function ServiceFormModal({
   const [priceMedium, setPriceMedium] = useState("");
   const [image, setImage] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
 
   useEffect(() => {
     if (!visible) return;
@@ -268,57 +351,155 @@ export function ServiceFormModal({
     setPriceMedium(service?.prices ? String(service.prices.medium) : "");
     setImage(service?.image ?? "");
     setSubmitted(false);
+    setPhotoUri(null);
+    setSaving(false);
+    setFormError("");
   }, [visible, service]);
 
-  const invalidPrice = (value: string) => (!value || Number(value) <= 0 ? "Harga harus lebih dari 0." : "");
+  const invalidPrice = (value: string) =>
+    !value || Number(value) <= 0 ? "Harga harus lebih dari 0." : "";
   const errors = {
     name: name.trim().length < 3 ? "Nama minimal 3 karakter." : "",
-    description: description.trim().length < 3 ? "Deskripsi minimal 3 karakter." : "",
+    description:
+      description.trim().length < 3 ? "Deskripsi minimal 3 karakter." : "",
     price: variable ? "" : invalidPrice(price),
     priceShort: variable ? invalidPrice(priceShort) : "",
     priceMedium: variable ? invalidPrice(priceMedium) : "",
   };
 
-  function save() {
+  async function pickPhoto() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.7, // kompres supaya upload ringan
+    });
+    if (!result.canceled) setPhotoUri(result.assets[0].uri);
+  }
+
+  async function save() {
     setSubmitted(true);
-    if (Object.values(errors).some(Boolean)) return;
+    if (saving) return;
+    // Pesan per-field bisa tertutup (form bisa digulir), jadi ringkasannya
+    // juga ditampilkan di dekat tombol Simpan.
+    const messages = Object.values(errors).filter(Boolean);
+    if (messages.length > 0) {
+      setFormError(`Periksa lagi isian: ${messages.join(" ")}`);
+      return;
+    }
     const base = {
       name: name.trim(),
       category,
       description: description.trim(),
       image: image.trim() || DEFAULT_SERVICE_IMAGE,
     };
-    onSubmit(
+    setSaving(true);
+    setFormError("");
+    const ok = await onSubmit(
       variable
-        ? { ...base, prices: { short: Number(priceShort), medium: Number(priceMedium) } }
+        ? {
+            ...base,
+            prices: { short: Number(priceShort), medium: Number(priceMedium) },
+          }
         : { ...base, price: Number(price) },
+      photoUri,
     );
+    setSaving(false);
+    if (!ok) setFormError(getServiceError() ?? "Gagal menyimpan. Coba lagi.");
   }
 
   return (
     <ModalShell
       visible={visible}
       title={service ? "Edit Layanan" : "Tambah Layanan"}
-      subtitle={service ? `ID ${service.id}` : "Layanan baru akan tampil di Home dan Booking."}
+      subtitle={
+        service
+          ? `ID ${service.id}`
+          : "Layanan baru akan tampil di Home dan Booking."
+      }
       onClose={onClose}
       onSave={save}
+      saving={saving}
     >
-      <Field label="Nama layanan" value={name} onChangeText={setName} placeholder="Contoh: Hair Tattoo" error={submitted ? errors.name : ""} />
-      <ChipSelect label="Kategori" options={SERVICE_CATEGORIES} value={category} onChange={setCategory} />
-      <Field label="Deskripsi" value={description} onChangeText={setDescription} placeholder="Deskripsi singkat layanan" multiline error={submitted ? errors.description : ""} />
+      <Field
+        label="Nama layanan"
+        value={name}
+        onChangeText={setName}
+        placeholder="Contoh: Hair Tattoo"
+        error={submitted ? errors.name : ""}
+      />
+      <ChipSelect
+        label="Kategori"
+        options={SERVICE_CATEGORIES}
+        value={category}
+        onChange={setCategory}
+      />
+      <Field
+        label="Deskripsi"
+        value={description}
+        onChangeText={setDescription}
+        placeholder="Deskripsi singkat layanan"
+        multiline
+        error={submitted ? errors.description : ""}
+      />
 
-      <SwitchRow label="Harga beda per panjang rambut" value={variable} onChange={setVariable} />
+      <SwitchRow
+        label="Harga beda per panjang rambut"
+        value={variable}
+        onChange={setVariable}
+      />
 
       {variable ? (
         <>
-          <Field label="Harga rambut pendek (Rp)" value={priceShort} onChangeText={(v) => setPriceShort(digitsOnly(v))} placeholder="100000" numeric error={submitted ? errors.priceShort : ""} />
-          <Field label="Harga rambut sedang (Rp)" value={priceMedium} onChangeText={(v) => setPriceMedium(digitsOnly(v))} placeholder="250000" numeric error={submitted ? errors.priceMedium : ""} />
+          <Field
+            label="Harga rambut pendek (Rp)"
+            value={priceShort}
+            onChangeText={(v) => setPriceShort(digitsOnly(v))}
+            placeholder="100000"
+            numeric
+            error={submitted ? errors.priceShort : ""}
+          />
+          <Field
+            label="Harga rambut sedang (Rp)"
+            value={priceMedium}
+            onChangeText={(v) => setPriceMedium(digitsOnly(v))}
+            placeholder="250000"
+            numeric
+            error={submitted ? errors.priceMedium : ""}
+          />
         </>
       ) : (
-        <Field label="Harga (Rp)" value={price} onChangeText={(v) => setPrice(digitsOnly(v))} placeholder="50000" numeric error={submitted ? errors.price : ""} />
+        <Field
+          label="Harga (Rp)"
+          value={price}
+          onChangeText={(v) => setPrice(digitsOnly(v))}
+          placeholder="50000"
+          numeric
+          error={submitted ? errors.price : ""}
+        />
       )}
 
-      <Field label="URL gambar (opsional)" value={image} onChangeText={setImage} placeholder="https://..." />
+      {photoUri || image ? (
+        <Image
+          source={{ uri: photoUri ?? image }}
+          style={{ width: "100%", height: 160, borderRadius: 12, marginBottom: 10 }}
+          contentFit="cover"
+        />
+      ) : null}
+      <Pressable
+        style={[styles.ghostButton, { marginBottom: 14 }]}
+        onPress={pickPhoto}
+      >
+        <AppText style={styles.ghostButtonText}>
+          {photoUri || image ? "Ganti foto" : "Pilih foto dari galeri"}
+        </AppText>
+      </Pressable>
+
+      {formError ? (
+        <AppText style={[styles.formErrorText, { marginBottom: 10 }]}>
+          {formError}
+        </AppText>
+      ) : null}
     </ModalShell>
   );
 }

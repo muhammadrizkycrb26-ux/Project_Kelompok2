@@ -1,6 +1,7 @@
 import baseStyles from "../../styles/screens/booking.styles";
 import { useDarkMode, useThemedStyles } from "@/data/theme-store";
 import { formatRupiah, services, type Service } from "@/data/services";
+import { useServices } from "@/data/catalog-store";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -12,7 +13,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { addBookingOrder, isBookingSlotAvailable, useOrders } from "../store/orders-store";
+import { addBookingOrder, isBookingSlotAvailable, useOrders } from "../../data/orders-store";
 
 const COLORS = {
   background: "#F7F4EF",
@@ -144,6 +145,7 @@ export default function BookingScreen() {
   }, []);
 
   const [customerName, setCustomerName] = useState("");
+  const services = useServices();
   const [selectedServiceId, setSelectedServiceId] = useState(
     services[0]?.id ?? "",
   );
@@ -153,9 +155,8 @@ export default function BookingScreen() {
   const [selectedTime, setSelectedTime] = useState("");
   const [hairLength, setHairLength] = useState<HairLength>("short");
 
-  const selectedService: Service | undefined = services.find(
-    (service) => service.id === selectedServiceId,
-  );
+  const selectedService: Service | undefined =
+  services.find((s) => s.id === selectedServiceId) ?? services[0];
 
   const hasVariablePrice = Boolean(selectedService?.prices);
 
@@ -382,7 +383,7 @@ export default function BookingScreen() {
 
         <View style={styles.serviceList}>
           {services.map((service) => {
-            const active = service.id === selectedServiceId;
+            const active = service.id === selectedService?.id;
 
             const priceLabel = service.prices
               ? `${formatRupiah(service.prices.short)} – ${formatRupiah(

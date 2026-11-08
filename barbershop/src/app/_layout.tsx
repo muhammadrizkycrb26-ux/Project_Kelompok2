@@ -1,4 +1,5 @@
-
+import { useEffect } from "react";
+import { loadServices } from "@/data/catalog-store";
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import {
@@ -30,6 +31,8 @@ export default function RootLayout() {
     Oswald_700Bold,
   });
 
+  useEffect(() => { void loadServices(); }, []);
+  
   if (!fontsLoaded && !fontError) return null;
 
   return (

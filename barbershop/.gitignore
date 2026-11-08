@@ -5,3 +5,10 @@ node_modules
 
 expo-env.d.ts
 # @end expo-cli
+
+# environment / rahasia
+.env
+.env.*
+!.env.example
+
+.expo/

@@ -15,6 +15,7 @@ import {
   updateService,
   useProducts,
   useServices,
+  getServiceError,
   type ProductInput,
   type ServiceInput,
 } from "@/data/catalog-store";
@@ -26,7 +27,7 @@ import {
   useOrders,
   type Order,
   type OrderStatus,
-} from "./store/orders-store";
+} from "../data/orders-store";
 
 type AdminTab = "Ringkasan" | "Pesanan" | "Produk" | "Layanan";
 type StatusFilter = "Semua" | OrderStatus;
@@ -58,7 +59,9 @@ function getOrderAmount(order: Order) {
   return order.type === "booking" ? order.price : order.total;
 }
 
-function getNextAction(order: Order): { label: string; status: OrderStatus } | null {
+function getNextAction(
+  order: Order,
+): { label: string; status: OrderStatus } | null {
   if (order.status === "Menunggu Proses") {
     return order.type === "product"
       ? { label: "Kirim Pesanan", status: "Sedang Dikirim" }
@@ -99,11 +102,17 @@ export default function AdminDashboardScreen() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Semua");
 
   // state form: open + item yang sedang diedit (null = tambah baru)
-  const [productForm, setProductForm] = useState<{ open: boolean; editing: Product | null }>({
+  const [productForm, setProductForm] = useState<{
+    open: boolean;
+    editing: Product | null;
+  }>({
     open: false,
     editing: null,
   });
-  const [serviceForm, setServiceForm] = useState<{ open: boolean; editing: Service | null }>({
+  const [serviceForm, setServiceForm] = useState<{
+    open: boolean;
+    editing: Service | null;
+  }>({
     open: false,
     editing: null,
   });
@@ -121,7 +130,10 @@ export default function AdminDashboardScreen() {
   }, [orders]);
 
   const lowStockProducts = useMemo(
-    () => products.filter((p) => p.stock <= LOW_STOCK_LIMIT).sort((a, b) => a.stock - b.stock),
+    () =>
+      products
+        .filter((p) => p.stock <= LOW_STOCK_LIMIT)
+        .sort((a, b) => a.stock - b.stock),
     [products],
   );
 
@@ -131,7 +143,10 @@ export default function AdminDashboardScreen() {
   );
 
   const filteredOrders = useMemo(
-    () => (statusFilter === "Semua" ? orders : orders.filter((o) => o.status === statusFilter)),
+    () =>
+      statusFilter === "Semua"
+        ? orders
+        : orders.filter((o) => o.status === statusFilter),
     [orders, statusFilter],
   );
 
@@ -141,8 +156,10 @@ export default function AdminDashboardScreen() {
   }
 
   function handleCancel(order: Order) {
-    confirmAction("Batalkan pesanan?", `Pesanan ${order.id} akan dibatalkan.`, () =>
-      updateOrderStatus(order.id, "Batal"),
+    confirmAction(
+      "Batalkan pesanan?",
+      `Pesanan ${order.id} akan dibatalkan.`,
+      () => updateOrderStatus(order.id, "Batal"),
     );
   }
 
@@ -154,21 +171,35 @@ export default function AdminDashboardScreen() {
   }
 
   function handleDeleteProduct(product: Product) {
-    confirmAction("Hapus produk?", `${product.name} akan dihapus dari katalog.`, () =>
-      deleteProduct(product.id),
+    confirmAction(
+      "Hapus produk?",
+      `${product.name} akan dihapus dari katalog.`,
+      () => deleteProduct(product.id),
     );
   }
 
   /* ---- CRUD Layanan ---- */
-  function handleSaveService(input: ServiceInput) {
-    if (serviceForm.editing) updateService(serviceForm.editing.id, input);
-    else addService(input);
-    setServiceForm({ open: false, editing: null });
+  async function handleSaveService(
+    input: ServiceInput,
+    photoUri?: string | null,
+  ) {
+    const ok = serviceForm.editing
+      ? await updateService(serviceForm.editing.id, input, photoUri)
+      : await addService(input, photoUri);
+    if (ok) setServiceForm({ open: false, editing: null });
+    else Alert.alert("Gagal menyimpan", getServiceError() ?? "Coba lagi.");
+    return ok;
   }
 
   function handleDeleteService(service: Service) {
-    confirmAction("Hapus layanan?", `${service.name} akan dihapus dari daftar layanan.`, () =>
-      deleteService(service.id),
+    confirmAction(
+      "Hapus layanan?",
+      `${service.name} akan dihapus dari daftar layanan.`,
+      async () => {
+        const ok = await deleteService(service.id);
+        if (!ok)
+          Alert.alert("Gagal menghapus", getServiceError() ?? "Coba lagi.");
+      },
     );
   }
 
@@ -189,7 +220,11 @@ export default function AdminDashboardScreen() {
               Kelola pesanan, produk, dan layanan.
             </AppText>
           </View>
-          <Pressable style={styles.logoutButton} onPress={handleLogout} accessibilityRole="button">
+          <Pressable
+            style={styles.logoutButton}
+            onPress={handleLogout}
+            accessibilityRole="button"
+          >
             <AppText style={styles.logoutText}>Keluar</AppText>
           </Pressable>
         </View>
@@ -202,7 +237,9 @@ export default function AdminDashboardScreen() {
               style={[styles.tabButton, tab === item && styles.tabButtonActive]}
               onPress={() => setTab(item)}
             >
-              <AppText style={[styles.tabText, tab === item && styles.tabTextActive]}>
+              <AppText
+                style={[styles.tabText, tab === item && styles.tabTextActive]}
+              >
                 {item}
               </AppText>
             </Pressable>
@@ -213,10 +250,27 @@ export default function AdminDashboardScreen() {
         {tab === "Ringkasan" && (
           <>
             <View style={styles.statsGrid}>
-              <StatCard dark icon="$" value={formatRupiah(stats.revenue)} label="Pendapatan (selesai)" />
-              <StatCard icon="◷" value={String(stats.bookings)} label="Total booking" />
-              <StatCard icon="◇" value={String(stats.productOrders)} label="Pesanan produk" />
-              <StatCard icon="!" value={String(stats.pending)} label="Menunggu proses" />
+              <StatCard
+                dark
+                icon="$"
+                value={formatRupiah(stats.revenue)}
+                label="Pendapatan (selesai)"
+              />
+              <StatCard
+                icon="◷"
+                value={String(stats.bookings)}
+                label="Total booking"
+              />
+              <StatCard
+                icon="◇"
+                value={String(stats.productOrders)}
+                label="Pesanan produk"
+              />
+              <StatCard
+                icon="!"
+                value={String(stats.pending)}
+                label="Menunggu proses"
+              />
             </View>
 
             <View style={styles.section}>
@@ -227,11 +281,18 @@ export default function AdminDashboardScreen() {
                 </Pressable>
               </View>
               {pendingOrders.length === 0 ? (
-                <EmptyState title="Semua beres" description="Tidak ada pesanan yang menunggu proses." />
+                <EmptyState
+                  title="Semua beres"
+                  description="Tidak ada pesanan yang menunggu proses."
+                />
               ) : (
                 <View style={styles.orderList}>
                   {pendingOrders.slice(0, 3).map((order) => (
-                    <OrderCard key={order.id} order={order} onCancel={handleCancel} />
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      onCancel={handleCancel}
+                    />
                   ))}
                 </View>
               )}
@@ -240,16 +301,23 @@ export default function AdminDashboardScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <AppText style={styles.sectionTitle}>Stok Menipis</AppText>
-                <AppText style={styles.sectionCaption}>≤ {LOW_STOCK_LIMIT} item</AppText>
+                <AppText style={styles.sectionCaption}>
+                  ≤ {LOW_STOCK_LIMIT} item
+                </AppText>
               </View>
               {lowStockProducts.length === 0 ? (
-                <EmptyState title="Stok aman" description="Semua produk masih tersedia cukup." />
+                <EmptyState
+                  title="Stok aman"
+                  description="Semua produk masih tersedia cukup."
+                />
               ) : (
                 lowStockProducts.map((product) => (
                   <ProductRow
                     key={product.id}
                     product={product}
-                    onEdit={() => setProductForm({ open: true, editing: product })}
+                    onEdit={() =>
+                      setProductForm({ open: true, editing: product })
+                    }
                   />
                 ))
               )}
@@ -269,9 +337,17 @@ export default function AdminDashboardScreen() {
                 <Pressable
                   key={item}
                   onPress={() => setStatusFilter(item)}
-                  style={[styles.chip, statusFilter === item && styles.chipActive]}
+                  style={[
+                    styles.chip,
+                    statusFilter === item && styles.chipActive,
+                  ]}
                 >
-                  <AppText style={[styles.chipText, statusFilter === item && styles.chipTextActive]}>
+                  <AppText
+                    style={[
+                      styles.chipText,
+                      statusFilter === item && styles.chipTextActive,
+                    ]}
+                  >
                     {item}
                   </AppText>
                 </Pressable>
@@ -286,7 +362,11 @@ export default function AdminDashboardScreen() {
             ) : (
               <View style={styles.orderList}>
                 {filteredOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} onCancel={handleCancel} />
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    onCancel={handleCancel}
+                  />
                 ))}
               </View>
             )}
@@ -299,24 +379,33 @@ export default function AdminDashboardScreen() {
             <View style={styles.sectionHeader}>
               <View>
                 <AppText style={styles.sectionTitle}>Daftar Produk</AppText>
-                <AppText style={styles.orderSub}>{products.length} produk</AppText>
+                <AppText style={styles.orderSub}>
+                  {products.length} produk
+                </AppText>
               </View>
               <Pressable
                 style={styles.primaryButton}
                 onPress={() => setProductForm({ open: true, editing: null })}
               >
-                <AppText style={styles.primaryButtonText}>+ Tambah Produk</AppText>
+                <AppText style={styles.primaryButtonText}>
+                  + Tambah Produk
+                </AppText>
               </Pressable>
             </View>
 
             {products.length === 0 ? (
-              <EmptyState title="Belum ada produk" description="Tekan “Tambah Produk” untuk menambah produk pertama." />
+              <EmptyState
+                title="Belum ada produk"
+                description="Tekan “Tambah Produk” untuk menambah produk pertama."
+              />
             ) : (
               products.map((product) => (
                 <ProductRow
                   key={product.id}
                   product={product}
-                  onEdit={() => setProductForm({ open: true, editing: product })}
+                  onEdit={() =>
+                    setProductForm({ open: true, editing: product })
+                  }
                   onDelete={() => handleDeleteProduct(product)}
                 />
               ))
@@ -330,37 +419,50 @@ export default function AdminDashboardScreen() {
             <View style={styles.sectionHeader}>
               <View>
                 <AppText style={styles.sectionTitle}>Daftar Layanan</AppText>
-                <AppText style={styles.orderSub}>{services.length} layanan</AppText>
+                <AppText style={styles.orderSub}>
+                  {services.length} layanan
+                </AppText>
               </View>
               <Pressable
                 style={styles.primaryButton}
                 onPress={() => setServiceForm({ open: true, editing: null })}
               >
-                <AppText style={styles.primaryButtonText}>+ Tambah Layanan</AppText>
+                <AppText style={styles.primaryButtonText}>
+                  + Tambah Layanan
+                </AppText>
               </Pressable>
             </View>
 
             {services.length === 0 ? (
-              <EmptyState title="Belum ada layanan" description="Tekan “Tambah Layanan” untuk menambah layanan pertama." />
+              <EmptyState
+                title="Belum ada layanan"
+                description="Tekan “Tambah Layanan” untuk menambah layanan pertama."
+              />
             ) : (
               services.map((service) => (
                 <RowShell
                   key={service.id}
-                  onEdit={() => setServiceForm({ open: true, editing: service })}
+                  onEdit={() =>
+                    setServiceForm({ open: true, editing: service })
+                  }
                   onDelete={() => handleDeleteService(service)}
                 >
                   <View style={styles.rowIcon}>
                     <AppText style={styles.rowIconText}>✂</AppText>
                   </View>
                   <View style={styles.rowInfo}>
-                    <AppText style={styles.rowCategory}>{service.category.toUpperCase()}</AppText>
+                    <AppText style={styles.rowCategory}>
+                      {service.category.toUpperCase()}
+                    </AppText>
                     <AppText style={styles.rowTitle}>{service.name}</AppText>
                     <AppText style={styles.rowMuted} numberOfLines={1}>
                       {service.description}
                     </AppText>
                   </View>
                   <View style={styles.rowRight}>
-                    <AppText style={styles.rowPrice}>{getServicePriceLabel(service)}</AppText>
+                    <AppText style={styles.rowPrice}>
+                      {getServicePriceLabel(service)}
+                    </AppText>
                   </View>
                 </RowShell>
               ))
@@ -404,13 +506,23 @@ function StatCard({
       <View style={[styles.statIcon, dark && styles.statIconDark]}>
         <AppText style={styles.statIconText}>{icon}</AppText>
       </View>
-      <AppText style={[styles.statNumber, dark && styles.statNumberLight]}>{value}</AppText>
-      <AppText style={[styles.statLabel, dark && styles.statLabelLight]}>{label}</AppText>
+      <AppText style={[styles.statNumber, dark && styles.statNumberLight]}>
+        {value}
+      </AppText>
+      <AppText style={[styles.statLabel, dark && styles.statLabelLight]}>
+        {label}
+      </AppText>
     </View>
   );
 }
 
-function EmptyState({ title, description }: { title: string; description: string }) {
+function EmptyState({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
   return (
     <View style={styles.emptyContainer}>
       <AppText style={styles.emptyTitle}>{title}</AppText>
@@ -466,14 +578,23 @@ function ProductRow({
         <AppText style={styles.rowIconText}>{product.emoji}</AppText>
       </View>
       <View style={styles.rowInfo}>
-        <AppText style={styles.rowCategory}>{product.category.toUpperCase()}</AppText>
+        <AppText style={styles.rowCategory}>
+          {product.category.toUpperCase()}
+        </AppText>
         <AppText style={styles.rowTitle}>{product.name}</AppText>
         <AppText style={styles.rowMuted}>{product.id}</AppText>
       </View>
       <View style={styles.rowRight}>
         <AppText style={styles.rowPrice}>{formatRupiah(product.price)}</AppText>
-        <View style={[styles.stockBadge, { backgroundColor: low ? "#FFF0D8" : "#DDF4E5" }]}>
-          <AppText style={[styles.stockText, { color: low ? "#9A641D" : "#267446" }]}>
+        <View
+          style={[
+            styles.stockBadge,
+            { backgroundColor: low ? "#FFF0D8" : "#DDF4E5" },
+          ]}
+        >
+          <AppText
+            style={[styles.stockText, { color: low ? "#9A641D" : "#267446" }]}
+          >
             Stok {product.stock}
           </AppText>
         </View>
@@ -491,14 +612,17 @@ function OrderCard({
 }) {
   const statusColor = getStatusColor(order.status);
   const next = getNextAction(order);
-  const canCancel = order.status === "Menunggu Proses" || order.status === "Sedang Dikirim";
+  const canCancel =
+    order.status === "Menunggu Proses" || order.status === "Sedang Dikirim";
 
   return (
     <View style={styles.orderCard}>
       <View style={styles.orderHeader}>
         <View style={styles.orderTypeWrap}>
           <View style={styles.orderIcon}>
-            <AppText style={styles.orderIconText}>{order.type === "booking" ? "✂" : "🧴"}</AppText>
+            <AppText style={styles.orderIconText}>
+              {order.type === "booking" ? "✂" : "🧴"}
+            </AppText>
           </View>
           <View style={styles.orderTitleWrap}>
             <AppText style={styles.orderTitle}>
@@ -511,7 +635,12 @@ function OrderCard({
             </AppText>
           </View>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: statusColor.backgroundColor }]}>
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: statusColor.backgroundColor },
+          ]}
+        >
           <AppText style={[styles.statusText, { color: statusColor.color }]}>
             {order.status.toUpperCase()}
           </AppText>
@@ -538,13 +667,18 @@ function OrderCard({
 
       <View style={styles.detailRow}>
         <AppText style={styles.detailLabel}>Total</AppText>
-        <AppText style={styles.totalValue}>{formatRupiah(getOrderAmount(order))}</AppText>
+        <AppText style={styles.totalValue}>
+          {formatRupiah(getOrderAmount(order))}
+        </AppText>
       </View>
 
       {(next || canCancel) && (
         <View style={styles.actionRow}>
           {canCancel && (
-            <Pressable style={styles.cancelButton} onPress={() => onCancel(order)}>
+            <Pressable
+              style={styles.cancelButton}
+              onPress={() => onCancel(order)}
+            >
               <AppText style={styles.cancelButtonText}>Batalkan</AppText>
             </Pressable>
           )}

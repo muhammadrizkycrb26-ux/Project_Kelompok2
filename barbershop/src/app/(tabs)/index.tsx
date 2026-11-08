@@ -4,6 +4,8 @@ import { useCurrentUser } from "@/data/auth";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useMemo, useState } from "react";
+import { ActivityIndicator } from "react-native";
+import { loadServices, useServiceStatus } from "@/data/catalog-store";
 import {
   Image,
   Pressable,
@@ -38,6 +40,20 @@ export default function HomeScreen() {
   const initial = currentUser?.name.trim().charAt(0).toUpperCase() || "U";
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
+  const { loading, error } = useServiceStatus();
+
+  {
+    loading && services.length === 0 ? (
+      <ActivityIndicator size="large" style={{ marginVertical: 24 }} />
+    ) : error ? (
+      <View style={{ padding: 16 }}>
+        <Text>{error}</Text>
+        <Pressable onPress={() => void loadServices()}>
+          <Text>Coba lagi</Text>
+        </Pressable>
+      </View>
+    ) : null;
+  }
 
   const filteredServices = useMemo(() => {
     return services.filter((service) => {
@@ -54,7 +70,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-        <StatusBar style={darkMode ? "light" : "dark"} />
+      <StatusBar style={darkMode ? "light" : "dark"} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
