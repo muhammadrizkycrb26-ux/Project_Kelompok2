@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from "react";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import { AppState, Platform } from "react-native";
 
 import { supabase } from "@/lib/supabase";
@@ -22,7 +24,11 @@ export type LocalUser = {
 
 type AuthState = { user: LocalUser | null; ready: boolean };
 
+// Wajib untuk alur OAuth di Expo: menyelesaikan sesi browser saat kembali ke app
+WebBrowser.maybeCompleteAuthSession();
+
 let state: AuthState = { user: null, ready: false };
+let recoveryPending = false; // true bila sesi berasal dari tautan "lupa password"
 let registrationNotice = false;
 let started = false;
 
@@ -66,17 +72,25 @@ export function getCurrentUser(): LocalUser | null {
 function translateAuthError(e: unknown): string {
   console.warn("[auth] error:", e);
   const message = (e as { message?: string })?.message ?? "";
+  // Satu pesan generik untuk semua kegagalan login (anti user enumeration):
+  // tidak membedakan "email tidak terdaftar" dan "password salah".
   if (message.includes("Invalid login credentials")) {
-    return "Email atau kata sandi belum cocok. Jika belum punya akun, silakan daftar dulu.";
+    return "Email atau kata sandi salah.";
   }
   if (message.includes("Email not confirmed")) {
-    return "Email belum dikonfirmasi. Cek email Anda, atau matikan 'Confirm email' di Supabase (Authentication > Providers > Email).";
+    return "Email belum dikonfirmasi. Cek kotak masuk email Anda.";
   }
   if (message.includes("already registered")) {
-    return "Email ini sudah terdaftar.";
+    return "Email ini sudah terdaftar. Gunakan email lain atau masuk.";
   }
-  if (message.includes("rate limit")) {
+  if (message.includes("rate limit") || message.includes("security purposes")) {
     return "Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi.";
+  }
+  if (message.includes("provider is not enabled")) {
+    return "Login Google belum diaktifkan di Supabase (Authentication > Providers > Google).";
+  }
+  if (message.includes("same password")) {
+    return "Kata sandi baru harus berbeda dari yang lama.";
   }
   if (
     message.includes("Failed to fetch") ||
@@ -84,7 +98,7 @@ function translateAuthError(e: unknown): string {
   ) {
     return "Tidak bisa terhubung ke Supabase. Periksa koneksi internet dan .env.";
   }
-  return message || "Terjadi kesalahan tak terduga.";
+  return "Terjadi kesalahan. Coba lagi.";
 }
 
 /* ---------------- Profil ---------------- */
@@ -128,6 +142,8 @@ export async function initAuth(): Promise<void> {
 
   supabase.auth.onAuthStateChange((event) => {
     if (event === "SIGNED_OUT") setState({ user: null });
+    // Dipicu saat pengguna membuka tautan reset password dari email
+    if (event === "PASSWORD_RECOVERY") recoveryPending = true;
   });
 
   // Di perangkat, token hanya diperbarui saat app sedang aktif.
@@ -229,4 +245,123 @@ export async function updateCurrentUser(
 
   setState({ user: next });
   return null;
+}
+
+/* ---------------- Google OAuth (Authorization Code + PKCE) ---------------- */
+
+/** Alamat tujuan kembali setelah login Google / membuka tautan email. */
+export function getAuthRedirectUrl(): string {
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    return `${window.location.origin}/auth/callback`;
+  }
+  // Mengikuti `scheme` di app.json. Di Expo Go berbentuk exp://..., di
+  // development build berbentuk <scheme>://auth/callback
+  return Linking.createURL("auth/callback");
+}
+
+/** Menukar authorization code dari URL dengan sesi Supabase (langkah PKCE). */
+export async function exchangeSessionFromUrl(url: string): Promise<string | null> {
+  const parsed = Linking.parse(url);
+  const params = parsed.queryParams ?? {};
+  const oauthError = params.error_description ?? params.error;
+  if (oauthError) return String(oauthError);
+  const code = params.code;
+  if (!code || Array.isArray(code)) return "Kode login tidak ditemukan.";
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  return error ? translateAuthError(error) : null;
+}
+
+/** Membaca sesi yang sedang aktif -> mengisi state pengguna (dipakai setelah OAuth). */
+export async function syncUserFromSession(): Promise<LocalUser | null> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return null;
+    const user = await fetchProfile(
+      data.session.user.id,
+      data.session.user.email ?? "",
+    );
+    setState({ user, ready: true });
+    return user;
+  } catch (e) {
+    console.warn("[auth] gagal membaca sesi:", e);
+    return null;
+  }
+}
+
+/**
+ * Login dengan Google. Mengembalikan { user, error }.
+ * - HP: membuka browser sistem, lalu kembali lewat redirect URL.
+ * - Web: seluruh halaman diarahkan ke Google, lalu kembali ke /auth/callback
+ *   (user bernilai null; sesi dipulihkan oleh halaman callback).
+ */
+export async function signInWithGoogle(): Promise<{
+  user: LocalUser | null;
+  error: string | null;
+}> {
+  try {
+    const redirectTo = getAuthRedirectUrl();
+    console.log("[auth] redirectTo =", redirectTo);
+
+    if (Platform.OS === "web") {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
+      });
+      return { user: null, error: error ? translateAuthError(error) : null };
+    }
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo, skipBrowserRedirect: true },
+    });
+    if (error || !data.url) {
+      return { user: null, error: translateAuthError(error) };
+    }
+
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    if (result.type !== "success") {
+      return { user: null, error: null }; // dibatalkan pengguna
+    }
+    const exchangeError = await exchangeSessionFromUrl(result.url);
+    if (exchangeError) return { user: null, error: exchangeError };
+
+    const user = await syncUserFromSession();
+    if (!user) return { user: null, error: "Gagal memuat profil. Coba lagi." };
+    return { user, error: null };
+  } catch (e) {
+    return { user: null, error: translateAuthError(e) };
+  }
+}
+
+/* ---------------- Lupa & ganti password ---------------- */
+
+/**
+ * Mengirim tautan reset. Sengaja SELALU berhasil dari sisi tampilan, agar tidak
+ * membocorkan apakah sebuah email terdaftar (materi slide 15). Hanya masalah
+ * jaringan / batas percobaan yang dilaporkan.
+ */
+export async function requestPasswordReset(email: string): Promise<string | null> {
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    email.trim().toLowerCase(),
+    { redirectTo: getAuthRedirectUrl() },
+  );
+  if (error) {
+    const msg = translateAuthError(error);
+    const reportable =
+      msg.includes("Terlalu banyak") || msg.includes("terhubung");
+    if (reportable) return msg;
+  }
+  return null;
+}
+
+/** true sekali saja bila sesi saat ini berasal dari tautan reset password. */
+export function consumeRecovery(): boolean {
+  const pending = recoveryPending;
+  recoveryPending = false;
+  return pending;
+}
+
+export async function updatePassword(newPassword: string): Promise<string | null> {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  return error ? translateAuthError(error) : null;
 }

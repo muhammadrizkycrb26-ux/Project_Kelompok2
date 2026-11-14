@@ -1,7 +1,7 @@
 import { Link, router } from "expo-router";
 import { useMemo, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { registerAccount } from "@/data/auth";
+import { registerAccount, signInWithGoogle } from "@/data/auth";
 
 const C = { bg: "#F7F4EF", ink: "#242321", muted: "#8C8781", orange: "#C9824A", white: "#FFFFFF", border: "#EAE4DC", danger: "#B42318", green: "#287A52" };
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -19,6 +19,7 @@ export default function RegisterScreen() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const errors = {
     name: name.length === 0 && submitted ? "Nama wajib diisi." : name.length > 0 && name.trim().length < 3 ? "Nama minimal 3 karakter." : "",
@@ -39,6 +40,20 @@ export default function RegisterScreen() {
     setLoading(false);
     if (registerError) { setFormError(registerError); return; }
     router.replace("/login");
+  }
+
+  async function handleGoogle() {
+    if (googleLoading || loading) return;
+    setFormError("");
+    setGoogleLoading(true);
+    const { user, error } = await signInWithGoogle();
+    setGoogleLoading(false);
+    if (error) {
+      setFormError(error);
+      return;
+    }
+    // Akun Google otomatis dibuatkan profil oleh trigger database
+    if (user) router.replace(user.role === "admin" ? "/admin" : "/(tabs)");
   }
 
   function update(setter: (value: string) => void, value: string) { setter(value); setFormError(""); }
@@ -71,6 +86,11 @@ export default function RegisterScreen() {
           {field("Konfirmasi kata sandi", confirmation, setConfirmation, errors.confirmation, "Ulangi kata sandi", { secure: true, show: showConfirmation, toggle: () => setShowConfirmation((value) => !value) })}
           {formError ? <Text style={styles.formError}>{formError}</Text> : null}
           <Pressable style={[styles.primaryButton, (!canSubmit || loading) && styles.disabledButton]} onPress={saveAccount} disabled={loading} accessibilityRole="button">{loading ? <ActivityIndicator color={C.white} /> : <Text style={styles.primaryText}>Buat Akun</Text>}</Pressable>
+
+          <View style={styles.dividerRow}><View style={styles.dividerLine} /><Text style={styles.dividerText}>atau</Text><View style={styles.dividerLine} /></View>
+          <Pressable style={[styles.googleButton, (googleLoading || loading) && styles.disabledButton]} onPress={handleGoogle} disabled={googleLoading || loading} accessibilityRole="button" accessibilityLabel="Daftar dengan Google">
+            {googleLoading ? <ActivityIndicator color={C.ink} /> : <><Text style={styles.googleG}>G</Text><Text style={styles.googleText}>Daftar dengan Google</Text></>}
+          </Pressable>
         </View>
 
         <View style={styles.footer}><Text style={styles.footerText}>Sudah punya akun? </Text><Link href="/login" asChild><Pressable><Text style={styles.link}>Masuk</Text></Pressable></Link></View>
@@ -85,4 +105,5 @@ const styles = StyleSheet.create({
   brandMark: { width: 46, height: 46, borderRadius: 14, backgroundColor: C.ink, alignItems: "center", justifyContent: "center", marginBottom: 17 }, brandMarkText: { color: C.white, fontSize: 25, fontWeight: "800" }, eyebrow: { color: C.orange, fontSize: 11, fontWeight: "800", letterSpacing: 2 }, title: { color: C.ink, fontSize: 30, lineHeight: 35, fontWeight: "800", marginTop: 8 }, subtitle: { color: C.muted, fontSize: 14, lineHeight: 21, marginTop: 9 },
   form: { marginTop: 22 }, label: { color: C.ink, fontSize: 12, fontWeight: "700", marginTop: 14, marginBottom: 6 }, inputWrap: { minHeight: 48, borderWidth: 1, borderColor: C.border, borderRadius: 12, backgroundColor: C.white, paddingHorizontal: 13, flexDirection: "row", alignItems: "center" }, input: { flex: 1, minHeight: 46, fontSize: 14, color: C.ink }, inputError: { borderColor: C.danger }, inputValid: { borderColor: C.green }, showPassword: { color: C.orange, fontWeight: "700", fontSize: 11, marginLeft: 8 }, error: { color: C.danger, fontSize: 11, marginTop: 4, lineHeight: 16 }, valid: { color: C.green, fontSize: 11, marginTop: 4 }, formError: { color: C.danger, backgroundColor: "#FCE8E6", padding: 11, borderRadius: 10, marginTop: 14, fontSize: 12 },
   primaryButton: { minHeight: 51, backgroundColor: C.orange, borderRadius: 13, alignItems: "center", justifyContent: "center", marginTop: 21 }, disabledButton: { opacity: 0.58 }, primaryText: { color: C.white, fontSize: 14, fontWeight: "800" }, footer: { flexDirection: "row", justifyContent: "center", marginTop: 21 }, footerText: { color: C.muted, fontSize: 13 }, link: { color: C.orange, fontSize: 13, fontWeight: "800" }, note: { textAlign: "center", color: C.muted, fontSize: 10, marginTop: 22 },
+  dividerRow: { flexDirection: "row", alignItems: "center", marginTop: 22 }, dividerLine: { flex: 1, height: 1, backgroundColor: C.border }, dividerText: { color: C.muted, fontSize: 12, marginHorizontal: 12 }, googleButton: { minHeight: 53, borderWidth: 1.5, borderColor: C.ink, borderRadius: 14, backgroundColor: C.white, alignItems: "center", justifyContent: "center", marginTop: 16, flexDirection: "row", gap: 10 }, googleG: { fontSize: 17, fontWeight: "900", color: "#4285F4" }, googleText: { color: C.ink, fontSize: 15, fontWeight: "800" },
 });
