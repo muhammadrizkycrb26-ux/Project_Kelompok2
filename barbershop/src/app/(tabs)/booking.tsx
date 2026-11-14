@@ -1,7 +1,8 @@
 import baseStyles from "../../styles/screens/booking.styles";
 import { useDarkMode, useThemedStyles } from "@/data/theme-store";
-import { formatRupiah, services, type Service } from "@/data/services";
-import { useServices } from "@/data/catalog-store";
+import { formatRupiah, type Service } from "@/data/services";
+import { useServices, useServiceStatus } from "@/data/catalog-store";
+import { useCurrentUser } from "@/data/auth";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -13,7 +14,13 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { addBookingOrder, isBookingSlotAvailable, useOrders } from "../../data/orders-store";
+import {
+  addBookingOrder,
+  getOrderError,
+  isBookingSlotAvailable,
+  useBookedSlots,
+  useOrders,
+} from "@/data/orders-store";
 
 const COLORS = {
   background: "#F7F4EF",
@@ -137,6 +144,11 @@ export default function BookingScreen() {
   const darkMode = useDarkMode();
   const dateOptions = useMemo(() => getDateOptions(), []);
   const orders = useOrders();
+  const bookedSlots = useBookedSlots();
+  const services = useServices();
+  const { loading: servicesLoading, error: servicesError } = useServiceStatus();
+  const currentUser = useCurrentUser();
+  const [saving, setSaving] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -144,19 +156,19 @@ export default function BookingScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  const [customerName, setCustomerName] = useState("");
-  const services = useServices();
-  const [selectedServiceId, setSelectedServiceId] = useState(
-    services[0]?.id ?? "",
-  );
+  const [customerName, setCustomerName] = useState(currentUser?.name ?? "");
+  const [pickedServiceId, setPickedServiceId] = useState("");
+  // Layanan dimuat dari database (asinkron): bila belum ada pilihan, pakai yang pertama
+  const selectedServiceId = pickedServiceId || services[0]?.id || "";
   const [selectedDate, setSelectedDate] = useState(
     dateOptions[0]?.key ?? getLocalDateKey(new Date()),
   );
   const [selectedTime, setSelectedTime] = useState("");
   const [hairLength, setHairLength] = useState<HairLength>("short");
 
-  const selectedService: Service | undefined =
-  services.find((s) => s.id === selectedServiceId) ?? services[0];
+  const selectedService: Service | undefined = services.find(
+    (service) => service.id === selectedServiceId,
+  );
 
   const hasVariablePrice = Boolean(selectedService?.prices);
 
@@ -168,17 +180,13 @@ export default function BookingScreen() {
 
   const availableSlots = useMemo(
     () => getAvailableSlots(selectedDate, now).filter((time) =>
-      isBookingSlotAvailable(
-        formatLongDate(selectedDate),
-        time,
-        ESTIMATED_SERVICE_MINUTES,
-      ),
+      isBookingSlotAvailable(selectedDate, time, ESTIMATED_SERVICE_MINUTES),
     ),
-    [selectedDate, now, orders],
+    [selectedDate, now, orders, bookedSlots],
   );
 
   function selectService(service: Service) {
-    setSelectedServiceId(service.id);
+    setPickedServiceId(service.id);
 
     if (service.prices) {
       setHairLength("short");
@@ -214,11 +222,7 @@ export default function BookingScreen() {
 
     if (
       !availableSlots.includes(selectedTime) ||
-      !isBookingSlotAvailable(
-        formatLongDate(selectedDate),
-        selectedTime,
-        ESTIMATED_SERVICE_MINUTES,
-      )
+      !isBookingSlotAvailable(selectedDate, selectedTime, ESTIMATED_SERVICE_MINUTES)
     ) {
       setSelectedTime("");
       showMessage(
@@ -231,7 +235,7 @@ export default function BookingScreen() {
     const bookingData = {
       customerName: customerName.trim(),
       serviceName: selectedService.name,
-      date: formatLongDate(selectedDate),
+      dateKey: selectedDate,
       time: selectedTime,
       durationMinutes: ESTIMATED_SERVICE_MINUTES,
       price: selectedPrice,
@@ -243,20 +247,24 @@ export default function BookingScreen() {
       ...(selectedService.prices
         ? [`Panjang rambut: ${hairLength === "short" ? "Pendek" : "Medium"}`]
         : []),
-      `Tanggal: ${bookingData.date}`,
+      `Tanggal: ${formatLongDate(bookingData.dateKey)}`,
       `Jam: ${bookingData.time}`,
       `Harga: ${formatRupiah(bookingData.price)}`,
     ].join("\n");
 
-    function saveBooking() {
+    async function saveBooking() {
+      if (saving) return;
+      setSaving(true);
       try {
-        const savedOrder = addBookingOrder(bookingData);
+        // Database yang memutuskan: dua HP tidak bisa mengambil jam yang sama
+        const savedOrder = await addBookingOrder(bookingData);
 
         if (!savedOrder) {
           setSelectedTime("");
           showMessage(
-            "Jadwal baru saja diambil",
-            "Silakan pilih slot waktu lain yang masih tersedia.",
+            "Booking belum tersimpan",
+            getOrderError() ??
+              "Silakan pilih slot waktu lain yang masih tersedia.",
           );
           return;
         }
@@ -265,7 +273,7 @@ export default function BookingScreen() {
 
         showMessage(
           "Booking berhasil",
-          `ID Booking: ${savedOrder.id}\n\nBooking sudah ditambahkan ke halaman Pesanan.`,
+          `ID Booking: ${savedOrder.id}\n\nBooking tersimpan di database dan tampil di halaman Pesanan.`,
         );
       } catch (error) {
         console.error("Gagal menyimpan booking:", error);
@@ -274,6 +282,8 @@ export default function BookingScreen() {
           "Booking gagal",
           "Booking gagal disimpan. Silakan coba lagi.",
         );
+      } finally {
+        setSaving(false);
       }
     }
 
@@ -283,7 +293,7 @@ export default function BookingScreen() {
       );
 
       if (confirmed) {
-        saveBooking();
+        void saveBooking();
       }
 
       return;
@@ -291,7 +301,7 @@ export default function BookingScreen() {
 
     Alert.alert(
       "Konfirmasi Booking",
-      `${summary}\n\nBooking akan disimpan ke riwayat aplikasi.`,
+      `${summary}\n\nBooking akan disimpan ke database.`,
       [
         {
           text: "Periksa lagi",
@@ -299,7 +309,7 @@ export default function BookingScreen() {
         },
         {
           text: "Konfirmasi",
-          onPress: saveBooking,
+          onPress: () => void saveBooking(),
         },
       ],
     );
@@ -381,9 +391,18 @@ export default function BookingScreen() {
           </View>
         </View>
 
+        {servicesLoading && services.length === 0 ? (
+          <Text style={styles.sectionSubtitle}>Memuat layanan...</Text>
+        ) : null}
+        {servicesError && services.length === 0 ? (
+          <Text style={[styles.sectionSubtitle, { color: "#B23B35" }]}>
+            {servicesError}
+          </Text>
+        ) : null}
+
         <View style={styles.serviceList}>
           {services.map((service) => {
-            const active = service.id === selectedService?.id;
+            const active = service.id === selectedServiceId;
 
             const priceLabel = service.prices
               ? `${formatRupiah(service.prices.short)} – ${formatRupiah(
@@ -638,16 +657,20 @@ export default function BookingScreen() {
 
           <Pressable
             onPress={handleBooking}
+            disabled={saving}
             style={({ pressed }) => [
               styles.bookingButton,
               pressed && styles.buttonPressed,
+              saving && { opacity: 0.6 },
             ]}
           >
-            <Text style={styles.bookingButtonText}>Konfirmasi Booking →</Text>
+            <Text style={styles.bookingButtonText}>
+              {saving ? "Menyimpan..." : "Konfirmasi Booking →"}
+            </Text>
           </Pressable>
 
           <Text style={styles.disclaimer}>
-            Ketersediaan ini hanya tersinkron di aplikasi yang sedang terbuka. Belum tersambung ke database atau perangkat lain.
+            Jadwal tersimpan di database, jadi jam yang sudah diambil pelanggan lain otomatis tidak bisa dipilih.
           </Text>
         </View>
 

@@ -1,4 +1,5 @@
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
+import { useCurrentUser } from '@/data/auth';
 import { Text } from 'react-native';
 import type { ColorValue } from 'react-native';
 import { useDarkMode } from '@/data/theme-store';
@@ -12,6 +13,10 @@ const COLORS = {
 
 export default function TabLayout() {
   const dark = useDarkMode();
+  const user = useCurrentUser();
+
+  // Halaman pengguna hanya untuk yang sudah login
+  if (!user) return <Redirect href="/login" />;
 
   return (
     <Tabs

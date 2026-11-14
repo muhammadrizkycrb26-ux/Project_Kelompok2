@@ -1,14 +1,22 @@
 import baseStyles from "../../styles/screens/shop.styles";
 import { useDarkMode, useThemedStyles } from "@/data/theme-store";
 import { formatRupiah, type Product } from "@/data/products";
-import { useProducts } from "@/data/catalog-store";
+import {
+  loadProducts,
+  useProducts,
+  useProductStatus,
+} from "@/data/catalog-store";
+import { getOrderError } from "@/data/orders-store";
 import { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   Image,
   Modal,
+  Platform,
   Pressable,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -16,7 +24,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { addProductOrder, type PaymentMethod } from "../../data/orders-store";
+import { addProductOrder, type PaymentMethod } from "@/data/orders-store";
 
 const C = {
   bg: "#F7F4EF",
@@ -32,24 +40,21 @@ const C = {
 type Category = "Semua" | "Styling" | "Perawatan";
 type CartItem = { product: Product; quantity: number };
 
-// Foto produk asli dari halaman produk terkait.
-// Sesuaikan foto dengan merek dan produk yang benar-benar dijual.
-const productImages: Record<string, string> = {
-  P001: "https://peteandpedro.com/cdn/shop/files/hi_res-7d-Michael_Levy_r2_0315_grande.jpg?v=1743620259",
-  P002: "https://no113.com.au/cdn/shop/files/100g_Pomade-Front_1.jpg?v=1754430061&width=1400",
-  P003: "https://scalpformen.com/cdn/shop/files/Foto_champu.png?v=1773304431",
-  P004: "https://images.unsplash.com/photo-1707539160277-e39464517645?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
-  P005: "https://plus.unsplash.com/premium_photo-1706800175278-4b39bab8ffc2?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
-  P006: "https://modernbarbersupply.com/cdn/shop/products/modern-image-hair-clay-969015.jpg?crop=center&height=1200&v=1702009854&width=1200",
-  P007: "https://peteandpedro.com/cdn/shop/files/hi_res-7d-Michael_Levy_r2_0315_grande.jpg?v=1743620259",
-  P008: "https://scandinavianbiolabs.us/cdn/shop/files/01_Shampoo_Men.jpg?v=1725361658&width=720",
-};
+function notify(title: string, message: string) {
+  if (Platform.OS === "web") {
+    window.alert(`${title}\n\n${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+}
 
 export default function ShopScreen() {
   const styles = useThemedStyles(baseStyles);
   const darkMode = useDarkMode();
   // ✅ BARU: ambil produk dari store (berubah otomatis kalau admin CRUD)
   const products = useProducts();
+  const { loading, error } = useProductStatus();
+  const [placing, setPlacing] = useState(false);
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<Category>("Semua");
@@ -87,7 +92,7 @@ export default function ShopScreen() {
 
       if (found) {
         if (found.quantity >= product.stock) {
-          Alert.alert(
+          notify(
             "Batas stok",
             "Jumlah produk sudah mencapai stok tersedia.",
           );
@@ -102,7 +107,7 @@ export default function ShopScreen() {
       }
 
       if (product.stock <= 0) {
-        Alert.alert("Stok habis", "Produk ini sedang tidak tersedia.");
+        notify("Stok habis", "Produk ini sedang tidak tersedia.");
         return current;
       }
 
@@ -119,7 +124,7 @@ export default function ShopScreen() {
           const quantity = item.quantity + change;
 
           if (quantity > item.product.stock) {
-            Alert.alert("Batas stok", "Jumlah melebihi stok tersedia.");
+            notify("Batas stok", "Jumlah melebihi stok tersedia.");
             return item;
           }
 
@@ -131,7 +136,7 @@ export default function ShopScreen() {
 
   const openCheckout = () => {
     if (cart.length === 0) {
-      Alert.alert("Keranjang kosong", "Tambahkan produk terlebih dahulu.");
+      notify("Keranjang kosong", "Tambahkan produk terlebih dahulu.");
       return;
     }
 
@@ -139,14 +144,17 @@ export default function ShopScreen() {
     setCheckoutVisible(true);
   };
 
-  const confirmCheckout = () => {
+  const confirmCheckout = async () => {
+    if (placing) return;
     if (cart.length === 0) {
-      Alert.alert("Keranjang kosong", "Tambahkan produk terlebih dahulu.");
+      notify("Keranjang kosong", "Tambahkan produk terlebih dahulu.");
       setCheckoutVisible(false);
       return;
     }
 
-    const createdOrder = addProductOrder(
+    setPlacing(true);
+    // Harga dan stok dihitung ulang oleh database, bukan oleh aplikasi
+    const createdOrder = await addProductOrder(
       cart.map((item) => ({
         productId: item.product.id,
         name: item.product.name,
@@ -155,9 +163,10 @@ export default function ShopScreen() {
       })),
       paymentMethod,
     );
+    setPlacing(false);
 
     if (!createdOrder) {
-      Alert.alert("Pesanan gagal", "Pesanan belum dapat dibuat. Coba lagi.");
+      notify("Pesanan gagal", getOrderError() ?? "Pesanan belum dapat dibuat. Coba lagi.");
       return;
     }
 
@@ -165,9 +174,9 @@ export default function ShopScreen() {
     setCheckoutVisible(false);
     setCartVisible(false);
 
-    Alert.alert(
+    notify(
       "Pesanan berhasil",
-      `Pesanan ${createdOrder.id} sudah ditambahkan ke riwayat lokal. Pembayaran dan pengiriman belum diproses karena aplikasi belum terhubung ke backend.`,
+      `Pesanan ${createdOrder.id} tersimpan di database dan stok produk sudah diperbarui. Pembayaran belum diproses (belum ada payment gateway).`,
     );
   };
 
@@ -175,7 +184,7 @@ export default function ShopScreen() {
     const quantity =
       cart.find((cartItem) => cartItem.product.id === item.id)?.quantity ?? 0;
 
-    const imageUrl = productImages[item.id];
+    const imageUrl = item.image;
 
     return (
       <View style={styles.productCard}>
@@ -224,7 +233,7 @@ export default function ShopScreen() {
   };
 
   const renderCartItem = (item: CartItem) => {
-    const cartImageUrl = productImages[item.product.id];
+    const cartImageUrl = item.product.image;
 
     return (
       <View key={item.product.id} style={styles.cartItem}>
@@ -384,7 +393,29 @@ export default function ShopScreen() {
         columnWrapperStyle={styles.productRow}
         contentContainerStyle={styles.productList}
         ListHeaderComponent={listHeader}
+        refreshControl={
+          <RefreshControl
+            refreshing={false}
+            onRefresh={() => void loadProducts()}
+            tintColor={C.orange}
+          />
+        }
         ListEmptyComponent={
+          loading && products.length === 0 ? (
+            <ActivityIndicator color={C.orange} style={{ marginTop: 40 }} />
+          ) : error && products.length === 0 ? (
+            <View style={styles.emptySearch}>
+              <Text style={styles.emptyEmoji}>⚠️</Text>
+              <Text style={styles.emptyTitle}>Produk gagal dimuat</Text>
+              <Text style={styles.emptyDescription}>{error}</Text>
+              <Pressable
+                style={styles.resetButton}
+                onPress={() => void loadProducts()}
+              >
+                <Text style={styles.resetButtonText}>Coba lagi</Text>
+              </Pressable>
+            </View>
+          ) : (
           <View style={styles.emptySearch}>
             <Text style={styles.emptyEmoji}>🔎</Text>
             <Text style={styles.emptyTitle}>Produk tidak ditemukan</Text>
@@ -401,6 +432,7 @@ export default function ShopScreen() {
               <Text style={styles.resetButtonText}>Reset pencarian</Text>
             </Pressable>
           </View>
+          )
         }
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -594,8 +626,14 @@ export default function ShopScreen() {
               </View>
             </ScrollView>
 
-            <Pressable style={styles.primaryButton} onPress={confirmCheckout}>
-              <Text style={styles.primaryButtonText}>Konfirmasi Pesanan</Text>
+            <Pressable
+              style={[styles.primaryButton, placing && { opacity: 0.6 }]}
+              onPress={confirmCheckout}
+              disabled={placing}
+            >
+              <Text style={styles.primaryButtonText}>
+                {placing ? "Memproses..." : "Konfirmasi Pesanan"}
+              </Text>
             </Pressable>
 
             <Pressable

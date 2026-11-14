@@ -1,7 +1,7 @@
 import { Link, router } from "expo-router";
 import { useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { registerLocalAccount } from "@/data/auth";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { registerAccount } from "@/data/auth";
 
 const C = { bg: "#F7F4EF", ink: "#242321", muted: "#8C8781", orange: "#C9824A", white: "#FFFFFF", border: "#EAE4DC", danger: "#B42318", green: "#287A52" };
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -18,6 +18,7 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [formError, setFormError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const errors = {
     name: name.length === 0 && submitted ? "Nama wajib diisi." : name.length > 0 && name.trim().length < 3 ? "Nama minimal 3 karakter." : "",
@@ -28,12 +29,15 @@ export default function RegisterScreen() {
   };
   const canSubmit = useMemo(() => name.trim().length >= 3 && emailPattern.test(email.trim()) && phonePattern.test(phone.trim()) && passwordPattern.test(password) && confirmation === password, [name, email, phone, password, confirmation]);
 
-  function saveAccount() {
+  async function saveAccount() {
+    if (loading) return;
     setSubmitted(true);
     setFormError("");
     if (!canSubmit) return;
-    const duplicateError = registerLocalAccount({ name: name.trim(), email: email.trim(), phone: phone.trim(), password });
-    if (duplicateError) { setFormError(duplicateError); return; }
+    setLoading(true);
+    const registerError = await registerAccount({ name: name.trim(), email: email.trim(), phone: phone.trim(), password });
+    setLoading(false);
+    if (registerError) { setFormError(registerError); return; }
     router.replace("/login");
   }
 
@@ -66,11 +70,11 @@ export default function RegisterScreen() {
           {field("Kata sandi", password, setPassword, errors.password, "Min. 8 karakter", { secure: true, show: showPassword, toggle: () => setShowPassword((value) => !value) })}
           {field("Konfirmasi kata sandi", confirmation, setConfirmation, errors.confirmation, "Ulangi kata sandi", { secure: true, show: showConfirmation, toggle: () => setShowConfirmation((value) => !value) })}
           {formError ? <Text style={styles.formError}>{formError}</Text> : null}
-          <Pressable style={[styles.primaryButton, !canSubmit && styles.disabledButton]} onPress={saveAccount} accessibilityRole="button"><Text style={styles.primaryText}>Buat Akun</Text></Pressable>
+          <Pressable style={[styles.primaryButton, (!canSubmit || loading) && styles.disabledButton]} onPress={saveAccount} disabled={loading} accessibilityRole="button">{loading ? <ActivityIndicator color={C.white} /> : <Text style={styles.primaryText}>Buat Akun</Text>}</Pressable>
         </View>
 
         <View style={styles.footer}><Text style={styles.footerText}>Sudah punya akun? </Text><Link href="/login" asChild><Pressable><Text style={styles.link}>Masuk</Text></Pressable></Link></View>
-        <Text style={styles.note}>Akun demo hanya aktif selama aplikasi terbuka.</Text>
+        <Text style={styles.note}>Akun disimpan aman di Supabase Auth.</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );

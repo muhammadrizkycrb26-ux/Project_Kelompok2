@@ -1,6 +1,6 @@
-import { useEffect } from "react";
-import { loadServices } from "@/data/catalog-store";
+
 import { Stack } from 'expo-router';
+import { useEffect } from 'react';
 import { useFonts } from 'expo-font';
 import {
   Inter_400Regular,
@@ -16,8 +16,28 @@ import {
   Oswald_600SemiBold,
   Oswald_700Bold,
 } from '@expo-google-fonts/oswald';
+import { initAuth, useCurrentUser } from '@/data/auth';
+import { loadProducts, loadServices } from '@/data/catalog-store';
+import { clearOrders, loadOrders } from '@/data/orders-store';
 
 export default function RootLayout() {
+  const user = useCurrentUser();
+
+  // Sekali saat app dibuka: pulihkan sesi login + muat katalog (publik)
+  useEffect(() => {
+    void initAuth();
+    void loadServices();
+    void loadProducts();
+  }, []);
+
+  // Pesanan bergantung pada siapa yang login: muat ulang saat akun berganti,
+  // kosongkan saat logout supaya data tidak bocor ke akun lain.
+  const userId = user?.id;
+  useEffect(() => {
+    if (userId) void loadOrders();
+    else clearOrders();
+  }, [userId]);
+
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -31,8 +51,6 @@ export default function RootLayout() {
     Oswald_700Bold,
   });
 
-  useEffect(() => { void loadServices(); }, []);
-  
   if (!fontsLoaded && !fontError) return null;
 
   return (

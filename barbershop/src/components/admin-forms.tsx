@@ -16,6 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 
 import AppText from "@/components/app-text";
 import {
+  getProductError,
   getServiceError,
   type ProductInput,
   type ServiceInput,
@@ -26,6 +27,7 @@ import styles, { C } from "../styles/screens/admin.styles";
 
 const PRODUCT_CATEGORIES = ["Styling", "Perawatan"];
 const SERVICE_CATEGORIES = ["Haircut", "Treatment", "Coloring", "Styling"];
+const DESCRIPTION_MAX = 120;
 const DEFAULT_SERVICE_IMAGE =
   "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800";
 
@@ -38,6 +40,7 @@ function ModalShell({
   onClose,
   onSave,
   saving,
+  dimmed,
   children,
 }: {
   visible: boolean;
@@ -46,6 +49,7 @@ function ModalShell({
   onClose: () => void;
   onSave: () => void;
   saving?: boolean;
+  dimmed?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -77,7 +81,7 @@ function ModalShell({
             <Pressable
               style={[
                 styles.primaryButton,
-                { flex: 1, alignItems: "center", opacity: saving ? 0.5 : 1 },
+                { flex: 1, alignItems: "center", opacity: saving || dimmed ? 0.5 : 1 },
               ]}
               onPress={onSave}
               disabled={saving}
@@ -103,6 +107,8 @@ function Field({
   placeholder,
   numeric,
   multiline,
+  onBlur,
+  counter,
 }: {
   label: string;
   value: string;
@@ -111,6 +117,8 @@ function Field({
   placeholder?: string;
   numeric?: boolean;
   multiline?: boolean;
+  onBlur?: () => void;
+  counter?: string;
 }) {
   return (
     <View style={{ marginBottom: 14 }}>
@@ -123,12 +131,25 @@ function Field({
         ]}
         value={value}
         onChangeText={onChangeText}
+        onBlur={onBlur}
         placeholder={placeholder}
         placeholderTextColor="#A49D95"
         keyboardType={numeric ? "numeric" : "default"}
         multiline={multiline}
         accessibilityLabel={label}
       />
+      {counter ? (
+        <AppText
+          style={{
+            color: "#8A8178",
+            fontSize: 12,
+            textAlign: "right",
+            marginTop: 4,
+          }}
+        >
+          {counter}
+        </AppText>
+      ) : null}
       {error ? <AppText style={styles.formErrorText}>{error}</AppText> : null}
     </View>
   );
@@ -205,7 +226,7 @@ export function ProductFormModal({
   visible: boolean;
   product: Product | null;
   onClose: () => void;
-  onSubmit: (input: ProductInput) => void;
+  onSubmit: (input: ProductInput, photoUri?: string | null) => Promise<boolean>;
 }) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState(PRODUCT_CATEGORIES[0]);
@@ -214,7 +235,12 @@ export function ProductFormModal({
   const [stock, setStock] = useState("");
   const [emoji, setEmoji] = useState("🧴");
   const [popular, setPopular] = useState(false);
+  const [image, setImage] = useState("");
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
 
   useEffect(() => {
     if (!visible) return;
@@ -225,7 +251,12 @@ export function ProductFormModal({
     setStock(product ? String(product.stock) : "");
     setEmoji(product?.emoji ?? "🧴");
     setPopular(product?.popular ?? false);
+    setImage(product?.image ?? "");
+    setPhotoUri(null);
     setSubmitted(false);
+    setTouched({});
+    setSaving(false);
+    setFormError("");
   }, [visible, product]);
 
   const errors = {
@@ -235,19 +266,54 @@ export function ProductFormModal({
     price: !price || Number(price) <= 0 ? "Harga harus lebih dari 0." : "",
     stock: stock === "" ? "Stok wajib diisi (boleh 0)." : "",
   };
+  const hasErrors = Object.values(errors).some(Boolean);
+  const touch = (key: keyof typeof errors) =>
+    setTouched((t) => ({ ...t, [key]: true }));
+  const show = (key: keyof typeof errors) =>
+    submitted || touched[key] ? errors[key] : "";
 
-  function save() {
-    setSubmitted(true);
-    if (Object.values(errors).some(Boolean)) return;
-    onSubmit({
-      name: name.trim(),
-      category,
-      description: description.trim(),
-      price: Number(price),
-      stock: Number(stock),
-      emoji: emoji.trim() || "🧴",
-      popular,
+  const hasPhoto = Boolean(photoUri) || image !== "";
+
+  function clearPhoto() {
+    setPhotoUri(null);
+    setImage(""); // kosong -> foto_url = null (kembali memakai emoji)
+  }
+
+  async function pickPhoto() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
     });
+    if (!result.canceled) setPhotoUri(result.assets[0].uri);
+  }
+
+  async function save() {
+    setSubmitted(true);
+    if (saving) return;
+    const messages = Object.values(errors).filter(Boolean);
+    if (messages.length > 0) {
+      setFormError(`Periksa lagi isian: ${messages.join(" ")}`);
+      return;
+    }
+    setSaving(true);
+    setFormError("");
+    const ok = await onSubmit(
+      {
+        name: name.trim(),
+        category,
+        description: description.trim(),
+        price: Number(price),
+        stock: Number(stock),
+        emoji: emoji.trim() || "🧴",
+        popular,
+        image: image.trim() || undefined,
+      },
+      photoUri,
+    );
+    setSaving(false);
+    if (!ok) setFormError(getProductError() ?? "Gagal menyimpan. Coba lagi.");
   }
 
   return (
@@ -261,13 +327,19 @@ export function ProductFormModal({
       }
       onClose={onClose}
       onSave={save}
+      saving={saving}
+      dimmed={hasErrors}
     >
       <Field
         label="Nama produk"
         value={name}
-        onChangeText={setName}
+        onChangeText={(v) => {
+          setName(v);
+          touch("name");
+        }}
+        onBlur={() => touch("name")}
         placeholder="Contoh: Sea Salt Spray"
-        error={submitted ? errors.name : ""}
+        error={show("name")}
       />
       <ChipSelect
         label="Kategori"
@@ -278,29 +350,41 @@ export function ProductFormModal({
       <Field
         label="Deskripsi"
         value={description}
-        onChangeText={setDescription}
+        onChangeText={(v) => {
+          setDescription(v);
+          touch("description");
+        }}
+        onBlur={() => touch("description")}
         placeholder="Deskripsi singkat produk"
         multiline
-        error={submitted ? errors.description : ""}
+        error={show("description")}
       />
       <Field
         label="Harga (Rp)"
         value={price}
-        onChangeText={(v) => setPrice(digitsOnly(v))}
+        onChangeText={(v) => {
+          setPrice(digitsOnly(v));
+          touch("price");
+        }}
+        onBlur={() => touch("price")}
         placeholder="45000"
         numeric
-        error={submitted ? errors.price : ""}
+        error={show("price")}
       />
       <Field
         label="Stok"
         value={stock}
-        onChangeText={(v) => setStock(digitsOnly(v))}
+        onChangeText={(v) => {
+          setStock(digitsOnly(v));
+          touch("stock");
+        }}
+        onBlur={() => touch("stock")}
         placeholder="10"
         numeric
-        error={submitted ? errors.stock : ""}
+        error={show("stock")}
       />
       <Field
-        label="Emoji ikon"
+        label="Emoji ikon (dipakai bila tanpa foto)"
         value={emoji}
         onChangeText={setEmoji}
         placeholder="🧴"
@@ -310,6 +394,35 @@ export function ProductFormModal({
         value={popular}
         onChange={setPopular}
       />
+
+      {hasPhoto ? (
+        <Image
+          source={{ uri: photoUri ?? image }}
+          style={{ width: "100%", height: 160, borderRadius: 12, marginBottom: 10 }}
+          contentFit="contain"
+        />
+      ) : null}
+      <View style={{ flexDirection: "row", gap: 10, marginBottom: 14 }}>
+        <Pressable
+          style={[styles.ghostButton, { flex: 1, alignItems: "center" }]}
+          onPress={pickPhoto}
+        >
+          <AppText style={styles.ghostButtonText}>
+            {hasPhoto ? "Ganti foto" : "Pilih foto dari galeri"}
+          </AppText>
+        </Pressable>
+        {hasPhoto ? (
+          <Pressable style={styles.smallDangerButton} onPress={clearPhoto}>
+            <AppText style={styles.smallDangerText}>Hapus foto</AppText>
+          </Pressable>
+        ) : null}
+      </View>
+
+      {formError ? (
+        <AppText style={[styles.formErrorText, { marginBottom: 10 }]}>
+          {formError}
+        </AppText>
+      ) : null}
     </ModalShell>
   );
 }
@@ -339,6 +452,7 @@ export function ServiceFormModal({
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!visible) return;
@@ -354,6 +468,7 @@ export function ServiceFormModal({
     setPhotoUri(null);
     setSaving(false);
     setFormError("");
+    setTouched({});
   }, [visible, service]);
 
   const invalidPrice = (value: string) =>
@@ -361,11 +476,32 @@ export function ServiceFormModal({
   const errors = {
     name: name.trim().length < 3 ? "Nama minimal 3 karakter." : "",
     description:
-      description.trim().length < 3 ? "Deskripsi minimal 3 karakter." : "",
+      description.trim().length < 3
+        ? "Deskripsi minimal 3 karakter."
+        : description.length > DESCRIPTION_MAX
+          ? `Deskripsi maksimal ${DESCRIPTION_MAX} karakter.`
+          : "",
     price: variable ? "" : invalidPrice(price),
     priceShort: variable ? invalidPrice(priceShort) : "",
     priceMedium: variable ? invalidPrice(priceMedium) : "",
   };
+
+  // Validasi realtime: error tampil setelah field disentuh/diketik,
+  // atau semuanya sekaligus setelah tombol Simpan ditekan.
+  const hasErrors = Object.values(errors).some(Boolean);
+  const touch = (key: keyof typeof errors) =>
+    setTouched((t) => ({ ...t, [key]: true }));
+  const show = (key: keyof typeof errors) =>
+    submitted || touched[key] ? errors[key] : "";
+
+  // Foto "ada" bila baru dipilih, atau foto tersimpan yang bukan placeholder.
+  const hasPhoto =
+    Boolean(photoUri) || (image !== "" && image !== DEFAULT_SERVICE_IMAGE);
+
+  function clearPhoto() {
+    setPhotoUri(null);
+    setImage(""); // kosong -> disimpan sebagai foto_url = null
+  }
 
   async function pickPhoto() {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -420,13 +556,18 @@ export function ServiceFormModal({
       onClose={onClose}
       onSave={save}
       saving={saving}
+      dimmed={hasErrors}
     >
       <Field
         label="Nama layanan"
         value={name}
-        onChangeText={setName}
+        onChangeText={(v) => {
+          setName(v);
+          touch("name");
+        }}
+        onBlur={() => touch("name")}
         placeholder="Contoh: Hair Tattoo"
-        error={submitted ? errors.name : ""}
+        error={show("name")}
       />
       <ChipSelect
         label="Kategori"
@@ -437,10 +578,15 @@ export function ServiceFormModal({
       <Field
         label="Deskripsi"
         value={description}
-        onChangeText={setDescription}
+        onChangeText={(v) => {
+          setDescription(v);
+          touch("description");
+        }}
+        onBlur={() => touch("description")}
         placeholder="Deskripsi singkat layanan"
         multiline
-        error={submitted ? errors.description : ""}
+        counter={`${description.length}/${DESCRIPTION_MAX}`}
+        error={show("description")}
       />
 
       <SwitchRow
@@ -454,46 +600,65 @@ export function ServiceFormModal({
           <Field
             label="Harga rambut pendek (Rp)"
             value={priceShort}
-            onChangeText={(v) => setPriceShort(digitsOnly(v))}
+            onChangeText={(v) => {
+              setPriceShort(digitsOnly(v));
+              touch("priceShort");
+            }}
+            onBlur={() => touch("priceShort")}
             placeholder="100000"
             numeric
-            error={submitted ? errors.priceShort : ""}
+            error={show("priceShort")}
           />
           <Field
             label="Harga rambut sedang (Rp)"
             value={priceMedium}
-            onChangeText={(v) => setPriceMedium(digitsOnly(v))}
+            onChangeText={(v) => {
+              setPriceMedium(digitsOnly(v));
+              touch("priceMedium");
+            }}
+            onBlur={() => touch("priceMedium")}
             placeholder="250000"
             numeric
-            error={submitted ? errors.priceMedium : ""}
+            error={show("priceMedium")}
           />
         </>
       ) : (
         <Field
           label="Harga (Rp)"
           value={price}
-          onChangeText={(v) => setPrice(digitsOnly(v))}
+          onChangeText={(v) => {
+            setPrice(digitsOnly(v));
+            touch("price");
+          }}
+          onBlur={() => touch("price")}
           placeholder="50000"
           numeric
-          error={submitted ? errors.price : ""}
+          error={show("price")}
         />
       )}
 
-      {photoUri || image ? (
+      {hasPhoto ? (
         <Image
           source={{ uri: photoUri ?? image }}
           style={{ width: "100%", height: 160, borderRadius: 12, marginBottom: 10 }}
           contentFit="cover"
         />
       ) : null}
-      <Pressable
-        style={[styles.ghostButton, { marginBottom: 14 }]}
-        onPress={pickPhoto}
-      >
-        <AppText style={styles.ghostButtonText}>
-          {photoUri || image ? "Ganti foto" : "Pilih foto dari galeri"}
-        </AppText>
-      </Pressable>
+      <View style={{ flexDirection: "row", gap: 10, marginBottom: 14 }}>
+        <Pressable
+          style={[styles.ghostButton, { flex: 1, alignItems: "center" }]}
+          onPress={pickPhoto}
+        >
+          <AppText style={styles.ghostButtonText}>
+            {hasPhoto ? "Ganti foto" : "Pilih foto dari galeri"}
+          </AppText>
+        </Pressable>
+        {hasPhoto ? (
+          <Pressable style={styles.smallDangerButton} onPress={clearPhoto}>
+            <AppText style={styles.smallDangerText}>Hapus foto</AppText>
+          </Pressable>
+        ) : null}
+      </View>
 
       {formError ? (
         <AppText style={[styles.formErrorText, { marginBottom: 10 }]}>

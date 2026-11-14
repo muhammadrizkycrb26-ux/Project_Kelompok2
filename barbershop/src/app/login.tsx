@@ -1,7 +1,7 @@
 import { router, Link } from "expo-router";
 import { useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { consumeRegistrationNotice, signInAdmin, signInLocalAccount } from "@/data/auth";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { consumeRegistrationNotice, signIn } from "@/data/auth";
 
 const C = { bg: "#F7F4EF", ink: "#242321", muted: "#8C8781", orange: "#C9824A", white: "#FFFFFF", border: "#EAE4DC", danger: "#B42318", green: "#287A52" };
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -12,6 +12,7 @@ export default function LoginScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [registeredNotice] = useState(() => consumeRegistrationNotice());
   const emailError = email.length === 0 && submitted ? "Email wajib diisi." : email.length > 0 && !emailPattern.test(email.trim()) ? "Masukkan alamat email yang valid." : "";
   const passwordError = password.length === 0 && submitted ? "Kata sandi wajib diisi." : password.length > 0 && password.length < 8 ? "Kata sandi minimal 8 karakter." : "";
@@ -19,20 +20,20 @@ export default function LoginScreen() {
   const passwordTouched = submitted || password.length > 0;
   const canSubmit = useMemo(() => emailPattern.test(email.trim()) && password.length >= 8, [email, password]);
 
-  function handleLogin() {
+  async function handleLogin() {
+    if (loading) return;
     setSubmitted(true);
     setMessage("");
     if (!canSubmit) return;
-    if (signInAdmin(email, password)) {
-      router.replace("/admin");
+    setLoading(true);
+    const { user, error } = await signIn(email, password);
+    setLoading(false);
+    if (error || !user) {
+      setMessage(error ?? "Gagal masuk. Coba lagi.");
       return;
     }
-    const account = signInLocalAccount(email, password);
-    if (!account) {
-      setMessage("Email atau kata sandi belum cocok. Jika belum punya akun, silakan daftar dulu.");
-      return;
-    }
-    router.replace("/(tabs)");
+    // Peran (admin / user) berasal dari tabel profiles di Supabase
+    router.replace(user.role === "admin" ? "/admin" : "/(tabs)");
   }
 
   return (
@@ -58,11 +59,11 @@ export default function LoginScreen() {
           {passwordTouched && passwordError ? <Text style={styles.error}>{passwordError}</Text> : passwordTouched && password ? <Text style={styles.valid}>Panjang kata sandi memenuhi syarat.</Text> : null}
           {message ? <Text style={styles.formError}>{message}</Text> : null}
 
-          <Pressable style={[styles.primaryButton, !canSubmit && styles.disabledButton]} onPress={handleLogin} accessibilityRole="button"><Text style={styles.primaryText}>Masuk</Text></Pressable>
+          <Pressable style={[styles.primaryButton, (!canSubmit || loading) && styles.disabledButton]} onPress={handleLogin} disabled={loading} accessibilityRole="button">{loading ? <ActivityIndicator color={C.white} /> : <Text style={styles.primaryText}>Masuk</Text>}</Pressable>
         </View>
 
         <View style={styles.footer}><Text style={styles.footerText}>Belum punya akun? </Text><Link href="/register" asChild><Pressable><Text style={styles.link}>Daftar sekarang</Text></Pressable></Link></View>
-        <Text style={styles.note}>Akun demo tersimpan sementara selama aplikasi terbuka.</Text>
+        <Text style={styles.note}>Akun tersimpan di Supabase Auth.</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );

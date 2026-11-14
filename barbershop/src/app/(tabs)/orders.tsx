@@ -2,8 +2,11 @@ import baseStyles from "../../styles/screens/orders.styles";
 import { useDarkMode, useThemedStyles } from "@/data/theme-store";
 import { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
+  Platform,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -14,10 +17,13 @@ import {
 
 import {
   cancelOrder,
+  getOrderError,
+  loadOrders,
   type Order,
   type OrderStatus,
   useOrders,
-} from "../../data/orders-store";
+  useOrderStatus,
+} from "@/data/orders-store";
 
 const C = {
   bg: "#F7F4EF",
@@ -43,6 +49,14 @@ function formatDate(value: string) {
     month: "short",
     year: "numeric",
   });
+}
+
+function showMessage(title: string, message: string) {
+  if (Platform.OS === "web") {
+    window.alert(`${title}\n\n${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
 }
 
 function getStatusColor(status: OrderStatus) {
@@ -79,6 +93,7 @@ export default function OrdersScreen() {
   const styles = useThemedStyles(baseStyles);
   const darkMode = useDarkMode();
   const orders = useOrders();
+  const { loading, error } = useOrderStatus();
 
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("Semua");
 
@@ -130,6 +145,23 @@ export default function OrdersScreen() {
       return;
     }
 
+    async function doCancel() {
+      const ok = await cancelOrder(order.id);
+      showMessage(
+        ok ? "Pesanan dibatalkan" : "Gagal membatalkan",
+        ok
+          ? "Status pesanan berhasil diperbarui."
+          : (getOrderError() ?? "Coba lagi."),
+      );
+    }
+
+    if (Platform.OS === "web") {
+      if (window.confirm("Batalkan pesanan?\n\nYakin ingin membatalkan pesanan ini?")) {
+        void doCancel();
+      }
+      return;
+    }
+
     Alert.alert("Batalkan pesanan?", "Yakin ingin membatalkan pesanan ini?", [
       {
         text: "Tidak",
@@ -138,13 +170,7 @@ export default function OrdersScreen() {
       {
         text: "Ya, batalkan",
         style: "destructive",
-        onPress: () => {
-          cancelOrder(order.id);
-          Alert.alert(
-            "Pesanan dibatalkan",
-            "Status pesanan berhasil diperbarui.",
-          );
-        },
+        onPress: () => void doCancel(),
       },
     ]);
   }
@@ -275,7 +301,45 @@ export default function OrdersScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={false}
+            onRefresh={() => void loadOrders()}
+            tintColor={C.orange}
+          />
+        }
       >
+        {loading && orders.length === 0 ? (
+          <ActivityIndicator color={C.orange} style={{ marginVertical: 16 }} />
+        ) : null}
+
+        {error ? (
+          <View
+            style={{
+              backgroundColor: "#FBE1DF",
+              borderRadius: 12,
+              padding: 12,
+              marginBottom: 12,
+            }}
+          >
+            <Text style={{ color: "#B23B35", fontSize: 13, lineHeight: 19 }}>
+              {error}
+            </Text>
+            <TouchableOpacity onPress={() => void loadOrders()}>
+              <Text
+                style={{
+                  color: "#B23B35",
+                  fontWeight: "700",
+                  fontSize: 13,
+                  marginTop: 6,
+                }}
+              >
+                Coba lagi
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>{orders.length}</Text>
@@ -411,7 +475,7 @@ export default function OrdersScreen() {
         </View>
 
         <Text style={styles.footerNote}>
-          Status pesanan ditampilkan berdasarkan data aplikasi.
+          Data pesanan diambil dari database. Tarik layar ke bawah untuk menyegarkan.
         </Text>
       </ScrollView>
     </SafeAreaView>

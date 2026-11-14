@@ -1,4 +1,9 @@
 import { useSyncExternalStore } from "react";
+import { AppState, Platform } from "react-native";
+
+import { supabase } from "@/lib/supabase";
+
+export type Role = "user" | "admin";
 
 export type LocalAccount = {
   name: string;
@@ -7,28 +12,26 @@ export type LocalAccount = {
   password: string;
 };
 
-export type LocalUser = Pick<LocalAccount, "name" | "email" | "phone">;
+export type LocalUser = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: Role;
+};
 
-// Prototype only: accounts live in memory and are cleared when the app restarts.
-// Akun demo selalu tersedia walau app di-reload.
-const accounts = new Map<string, LocalAccount>([
-  [
-    "demo@corte.com",
-    {
-      name: "Demo User",
-      email: "demo@corte.com",
-      phone: "081234567890",
-      password: "Demo12345",
-    },
-  ],
-]);
-let currentUser: LocalUser | null = null;
+type AuthState = { user: LocalUser | null; ready: boolean };
+
+let state: AuthState = { user: null, ready: false };
 let registrationNotice = false;
+let started = false;
 
-// Listener supaya komponen (misal avatar di Home) ikut update saat user berubah
+/* ---------------- Langganan (pub/sub) ---------------- */
+
 const listeners = new Set<() => void>();
 
-function notify() {
+function setState(patch: Partial<AuthState>) {
+  state = { ...state, ...patch };
   listeners.forEach((listener) => listener());
 }
 
@@ -40,15 +43,134 @@ function subscribe(listener: () => void) {
 export function useCurrentUser(): LocalUser | null {
   return useSyncExternalStore(
     subscribe,
-    () => currentUser,
-    () => currentUser,
+    () => state.user,
+    () => state.user,
   );
 }
 
-export function registerLocalAccount(account: LocalAccount): string | null {
-  const email = account.email.trim().toLowerCase();
-  if (accounts.has(email)) return "Email ini sudah terdaftar.";
-  accounts.set(email, { ...account, email });
+/** false selama sesi login tersimpan masih diperiksa (saat app baru dibuka). */
+export function useAuthReady(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => state.ready,
+    () => state.ready,
+  );
+}
+
+export function getCurrentUser(): LocalUser | null {
+  return state.user;
+}
+
+/* ---------------- Pesan error ---------------- */
+
+function translateAuthError(e: unknown): string {
+  console.warn("[auth] error:", e);
+  const message = (e as { message?: string })?.message ?? "";
+  if (message.includes("Invalid login credentials")) {
+    return "Email atau kata sandi belum cocok. Jika belum punya akun, silakan daftar dulu.";
+  }
+  if (message.includes("Email not confirmed")) {
+    return "Email belum dikonfirmasi. Cek email Anda, atau matikan 'Confirm email' di Supabase (Authentication > Providers > Email).";
+  }
+  if (message.includes("already registered")) {
+    return "Email ini sudah terdaftar.";
+  }
+  if (message.includes("rate limit")) {
+    return "Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi.";
+  }
+  if (
+    message.includes("Failed to fetch") ||
+    message.includes("Network request failed")
+  ) {
+    return "Tidak bisa terhubung ke Supabase. Periksa koneksi internet dan .env.";
+  }
+  return message || "Terjadi kesalahan tak terduga.";
+}
+
+/* ---------------- Profil ---------------- */
+
+type ProfileRow = {
+  id: string;
+  nama: string;
+  email: string;
+  telepon: string;
+  role: Role;
+};
+
+async function fetchProfile(
+  id: string,
+  fallbackEmail: string,
+): Promise<LocalUser> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, nama, email, telepon, role")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  const row = data as ProfileRow | null;
+  // Baris profil belum ada (mis. akun dibuat sebelum trigger dipasang):
+  // tetap anggap pengguna biasa supaya app tidak macet.
+  return {
+    id,
+    name: row?.nama ?? "",
+    email: row?.email || fallbackEmail,
+    phone: row?.telepon ?? "",
+    role: row?.role ?? "user",
+  };
+}
+
+/* ---------------- Sesi ---------------- */
+
+/** Panggil sekali saat app dibuka: memulihkan sesi login yang tersimpan. */
+export async function initAuth(): Promise<void> {
+  if (started) return;
+  started = true;
+
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === "SIGNED_OUT") setState({ user: null });
+  });
+
+  // Di perangkat, token hanya diperbarui saat app sedang aktif.
+  if (Platform.OS !== "web") {
+    AppState.addEventListener("change", (status) => {
+      if (status === "active") supabase.auth.startAutoRefresh();
+      else supabase.auth.stopAutoRefresh();
+    });
+  }
+
+  try {
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
+    if (session) {
+      const user = await fetchProfile(session.user.id, session.user.email ?? "");
+      setState({ user, ready: true });
+      return;
+    }
+  } catch (e) {
+    console.warn("[auth] gagal memulihkan sesi:", e);
+  }
+  setState({ user: null, ready: true });
+}
+
+/** Mengembalikan pesan error, atau null bila berhasil. */
+export async function registerAccount(
+  account: LocalAccount,
+): Promise<string | null> {
+  const { data, error } = await supabase.auth.signUp({
+    email: account.email.trim().toLowerCase(),
+    password: account.password,
+    options: { data: { nama: account.name, telepon: account.phone } },
+  });
+  if (error) return translateAuthError(error);
+
+  // Bila "Confirm email" menyala, email yang sudah terdaftar tidak memberi error
+  // melainkan user tanpa identitas.
+  if (data.user && data.user.identities?.length === 0) {
+    return "Email ini sudah terdaftar.";
+  }
+
+  // Alur aplikasi: setelah daftar, pengguna diarahkan ke halaman Masuk.
+  if (data.session) await supabase.auth.signOut();
   registrationNotice = true;
   return null;
 }
@@ -59,43 +181,52 @@ export function consumeRegistrationNotice(): boolean {
   return didRegister;
 }
 
-export function signInLocalAccount(email: string, password: string): LocalAccount | null {
-  const account = accounts.get(email.trim().toLowerCase());
-  if (!account || account.password !== password) return null;
-
-  currentUser = { name: account.name, email: account.email, phone: account.phone };
-  notify();
-  return account;
+export async function signIn(
+  email: string,
+  password: string,
+): Promise<{ user: LocalUser | null; error: string | null }> {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+    if (error) return { user: null, error: translateAuthError(error) };
+    const user = await fetchProfile(data.user.id, data.user.email ?? "");
+    setState({ user, ready: true });
+    return { user, error: null };
+  } catch (e) {
+    return { user: null, error: translateAuthError(e) };
+  }
 }
 
-export function getCurrentUser(): LocalUser | null {
-  return currentUser;
+export async function signOut(): Promise<void> {
+  try {
+    await supabase.auth.signOut();
+  } catch (e) {
+    console.warn("[auth] signOut gagal:", e);
+  }
+  setState({ user: null });
 }
 
-// Dipanggil saat profil diedit: update user aktif + data akunnya
-export function updateCurrentUser(patch: Partial<Pick<LocalUser, "name" | "phone">>) {
-  if (!currentUser) return;
+/** Menyimpan perubahan profil ke tabel profiles. Mengembalikan pesan error atau null. */
+export async function updateCurrentUser(
+  patch: Partial<Pick<LocalUser, "name" | "phone">>,
+): Promise<string | null> {
+  const current = state.user;
+  if (!current) return "Silakan masuk terlebih dahulu.";
 
-  currentUser = { ...currentUser, ...patch };
+  const next = { ...current, ...patch };
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ nama: next.name, telepon: next.phone })
+    .eq("id", current.id)
+    .select("id");
+  if (error) return translateAuthError(error);
+  // RLS yang menolak update tidak memberi error, hanya 0 baris berubah
+  if (!data || data.length === 0) {
+    return "Profil tidak ditemukan di database. Jalankan SQL Bagian A (trigger profiles).";
+  }
 
-  const account = accounts.get(currentUser.email);
-  if (account) accounts.set(currentUser.email, { ...account, ...patch });
-
-  notify();
-}
-
-export function signOutLocalAccount() {
-  currentUser = null;
-  notify();
-}
-
-// Prototype only: kredensial admin hardcoded. Ganti dengan backend/auth asli nanti.
-const ADMIN_EMAIL = "admin@corte.com";
-const ADMIN_PASSWORD = "admin12345";
-
-export function signInAdmin(email: string, password: string): boolean {
-  if (email.trim().toLowerCase() !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) return false;
-  currentUser = { name: "Admin Corte", email: ADMIN_EMAIL, phone: "-" };
-  notify();
-  return true;
+  setState({ user: next });
+  return null;
 }

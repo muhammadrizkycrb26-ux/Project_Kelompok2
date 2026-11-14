@@ -1,11 +1,19 @@
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useMemo, useState, type ReactNode } from "react";
-import { Alert, Platform, Pressable, ScrollView, View } from "react-native";
+import { Image } from "expo-image";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  ScrollView,
+  TextInput,
+  View,
+} from "react-native";
 
 import { ProductFormModal, ServiceFormModal } from "@/components/admin-forms";
 import AppText from "@/components/app-text";
-import { signOutLocalAccount } from "@/data/auth";
+import { signOut, useCurrentUser } from "@/data/auth";
 import {
   addProduct,
   addService,
@@ -15,7 +23,11 @@ import {
   updateService,
   useProducts,
   useServices,
+  getProductError,
   getServiceError,
+  loadProducts,
+  loadServices,
+  searchServices,
   type ProductInput,
   type ServiceInput,
 } from "@/data/catalog-store";
@@ -23,11 +35,14 @@ import { formatRupiah, type Product } from "@/data/products";
 import { getServicePriceLabel, type Service } from "@/data/services";
 import styles from "../styles/screens/admin.styles";
 import {
+  getOrderError,
+  loadOrders,
   updateOrderStatus,
   useOrders,
+  useOrderStatus,
   type Order,
   type OrderStatus,
-} from "../data/orders-store";
+} from "@/data/orders-store";
 
 type AdminTab = "Ringkasan" | "Pesanan" | "Produk" | "Layanan";
 type StatusFilter = "Semua" | OrderStatus;
@@ -81,6 +96,15 @@ function formatDate(value: string) {
   });
 }
 
+// Alert.alert tidak menampilkan apa pun di web, jadi dibedakan
+function showError(title: string, message: string) {
+  if (Platform.OS === "web") {
+    window.alert(`${title}\n\n${message}`);
+    return;
+  }
+  Alert.alert(title, message);
+}
+
 // Alert.alert dengan tombol tidak jalan di web, jadi dibedakan
 function confirmAction(title: string, message: string, onConfirm: () => void) {
   if (Platform.OS === "web") {
@@ -94,12 +118,19 @@ function confirmAction(title: string, message: string, onConfirm: () => void) {
 }
 
 export default function AdminDashboardScreen() {
+  const user = useCurrentUser();
   const orders = useOrders();
+  const orderStatus = useOrderStatus();
   const products = useProducts();
   const services = useServices();
 
   const [tab, setTab] = useState<AdminTab>("Ringkasan");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Semua");
+
+  // pencarian layanan di sisi server (null = tidak ada pencarian aktif)
+  const [serviceQuery, setServiceQuery] = useState("");
+  const [serviceResults, setServiceResults] = useState<Service[] | null>(null);
+  const [searchError, setSearchError] = useState("");
 
   // state form: open + item yang sedang diedit (null = tambah baru)
   const [productForm, setProductForm] = useState<{
@@ -150,31 +181,76 @@ export default function AdminDashboardScreen() {
     [orders, statusFilter],
   );
 
-  function handleLogout() {
-    signOutLocalAccount();
+  // debounce 300 ms; dijalankan ulang saat daftar layanan berubah (CRUD)
+  useEffect(() => {
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const result = await searchServices(serviceQuery);
+        if (cancelled) return;
+        setServiceResults(result);
+        setSearchError("");
+      } catch (e) {
+        if (cancelled) return;
+        setServiceResults([]);
+        setSearchError(e instanceof Error ? e.message : "Pencarian gagal.");
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [serviceQuery, services]);
+
+  const visibleServices = serviceResults ?? services;
+
+  // Hanya akun ber-role admin (kolom role di tabel profiles) yang boleh di sini.
+  // Penjaga sebenarnya ada di RLS database; ini sekadar mencegah layar terbuka.
+  if (!user || user.role !== "admin") return <Redirect href="/login" />;
+
+  async function handleLogout() {
+    await signOut();
     router.replace("/login");
+  }
+
+  function refreshAll() {
+    void loadOrders();
+    void loadProducts();
+    void loadServices();
   }
 
   function handleCancel(order: Order) {
     confirmAction(
       "Batalkan pesanan?",
       `Pesanan ${order.id} akan dibatalkan.`,
-      () => updateOrderStatus(order.id, "Batal"),
+      async () => {
+        const ok = await updateOrderStatus(order.id, "Batal");
+        if (!ok) showError("Gagal membatalkan", getOrderError() ?? "Coba lagi.");
+      },
     );
   }
 
   /* ---- CRUD Produk ---- */
-  function handleSaveProduct(input: ProductInput) {
-    if (productForm.editing) updateProduct(productForm.editing.id, input);
-    else addProduct(input);
-    setProductForm({ open: false, editing: null });
+  async function handleSaveProduct(
+    input: ProductInput,
+    photoUri?: string | null,
+  ) {
+    const ok = productForm.editing
+      ? await updateProduct(productForm.editing.id, input, photoUri)
+      : await addProduct(input, photoUri);
+    // Jika gagal, pesan error tampil di dalam form
+    if (ok) setProductForm({ open: false, editing: null });
+    return ok;
   }
 
   function handleDeleteProduct(product: Product) {
     confirmAction(
       "Hapus produk?",
       `${product.name} akan dihapus dari katalog.`,
-      () => deleteProduct(product.id),
+      async () => {
+        const ok = await deleteProduct(product.id);
+        if (!ok) showError("Gagal menghapus", getProductError() ?? "Coba lagi.");
+      },
     );
   }
 
@@ -186,8 +262,8 @@ export default function AdminDashboardScreen() {
     const ok = serviceForm.editing
       ? await updateService(serviceForm.editing.id, input, photoUri)
       : await addService(input, photoUri);
+    // Jika gagal, pesan error ditampilkan di dalam form (lihat admin-forms.tsx)
     if (ok) setServiceForm({ open: false, editing: null });
-    else Alert.alert("Gagal menyimpan", getServiceError() ?? "Coba lagi.");
     return ok;
   }
 
@@ -197,8 +273,7 @@ export default function AdminDashboardScreen() {
       `${service.name} akan dihapus dari daftar layanan.`,
       async () => {
         const ok = await deleteService(service.id);
-        if (!ok)
-          Alert.alert("Gagal menghapus", getServiceError() ?? "Coba lagi.");
+        if (!ok) showError("Gagal menghapus", getServiceError() ?? "Coba lagi.");
       },
     );
   }
@@ -228,6 +303,19 @@ export default function AdminDashboardScreen() {
             <AppText style={styles.logoutText}>Keluar</AppText>
           </Pressable>
         </View>
+
+        {/* Segarkan data + status pemuatan pesanan */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 }}>
+          <Pressable style={styles.smallButton} onPress={refreshAll}>
+            <AppText style={styles.smallButtonText}>↻ Segarkan data</AppText>
+          </Pressable>
+          {orderStatus.loading ? <AppText style={styles.rowMuted}>Memuat...</AppText> : null}
+        </View>
+        {orderStatus.error ? (
+          <AppText style={[styles.formErrorText, { marginBottom: 12 }]}>
+            {orderStatus.error}
+          </AppText>
+        ) : null}
 
         {/* Tab switcher */}
         <View style={styles.tabBar}>
@@ -433,13 +521,29 @@ export default function AdminDashboardScreen() {
               </Pressable>
             </View>
 
-            {services.length === 0 ? (
+            <TextInput
+              style={[styles.formInput, { marginBottom: 12 }]}
+              value={serviceQuery}
+              onChangeText={setServiceQuery}
+              placeholder="Cari layanan berdasarkan nama..."
+              placeholderTextColor="#A49D95"
+              accessibilityLabel="Cari layanan"
+            />
+            {searchError ? (
+              <AppText style={styles.formErrorText}>{searchError}</AppText>
+            ) : null}
+
+            {visibleServices.length === 0 ? (
               <EmptyState
-                title="Belum ada layanan"
-                description="Tekan “Tambah Layanan” untuk menambah layanan pertama."
+                title={serviceQuery.trim() ? "Tidak ditemukan" : "Belum ada layanan"}
+                description={
+                  serviceQuery.trim()
+                    ? `Tidak ada layanan dengan nama “${serviceQuery.trim()}”.`
+                    : "Tekan “Tambah Layanan” untuk menambah layanan pertama."
+                }
               />
             ) : (
-              services.map((service) => (
+              visibleServices.map((service) => (
                 <RowShell
                   key={service.id}
                   onEdit={() =>
@@ -447,9 +551,11 @@ export default function AdminDashboardScreen() {
                   }
                   onDelete={() => handleDeleteService(service)}
                 >
-                  <View style={styles.rowIcon}>
-                    <AppText style={styles.rowIconText}>✂</AppText>
-                  </View>
+                  <Image
+                    source={{ uri: service.image }}
+                    style={{ width: 48, height: 48, borderRadius: 12 }}
+                    contentFit="cover"
+                  />
                   <View style={styles.rowInfo}>
                     <AppText style={styles.rowCategory}>
                       {service.category.toUpperCase()}
@@ -574,15 +680,23 @@ function ProductRow({
   const low = product.stock <= LOW_STOCK_LIMIT;
   return (
     <RowShell onEdit={onEdit} onDelete={onDelete}>
-      <View style={styles.rowIcon}>
-        <AppText style={styles.rowIconText}>{product.emoji}</AppText>
-      </View>
+      {product.image ? (
+        <Image
+          source={{ uri: product.image }}
+          style={{ width: 48, height: 48, borderRadius: 12 }}
+          contentFit="contain"
+        />
+      ) : (
+        <View style={styles.rowIcon}>
+          <AppText style={styles.rowIconText}>{product.emoji}</AppText>
+        </View>
+      )}
       <View style={styles.rowInfo}>
         <AppText style={styles.rowCategory}>
           {product.category.toUpperCase()}
         </AppText>
         <AppText style={styles.rowTitle}>{product.name}</AppText>
-        <AppText style={styles.rowMuted}>{product.id}</AppText>
+        <AppText style={styles.rowMuted}>{product.id.slice(0, 8)}</AppText>
       </View>
       <View style={styles.rowRight}>
         <AppText style={styles.rowPrice}>{formatRupiah(product.price)}</AppText>
@@ -685,7 +799,12 @@ function OrderCard({
           {next && (
             <Pressable
               style={styles.primaryButton}
-              onPress={() => updateOrderStatus(order.id, next.status)}
+              onPress={async () => {
+                const ok = await updateOrderStatus(order.id, next.status);
+                if (!ok) {
+                  showError("Status tidak berubah", getOrderError() ?? "Coba lagi.");
+                }
+              }}
             >
               <AppText style={styles.primaryButtonText}>{next.label}</AppText>
             </Pressable>

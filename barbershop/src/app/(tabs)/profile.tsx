@@ -14,7 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { getCurrentUser, signOutLocalAccount, updateCurrentUser } from "@/data/auth";
+import { signOut, updateCurrentUser, useCurrentUser } from "@/data/auth";
 
 const C = {
   background: "#F7F4EF",
@@ -32,43 +32,51 @@ type DialogType = "logout" | "info" | null;
 export default function ProfileScreen() {
   const styles = useThemedStyles(baseStyles);
   const darkMode = useDarkMode();
-  const currentUser = getCurrentUser();
-  const [name, setName] = useState(currentUser?.name ?? "Tanu Hasyim");
-  const [phone, setPhone] = useState(currentUser?.phone ?? "081234567890");
+  const currentUser = useCurrentUser();
+  // Data tampil langsung dari akun yang login (tabel profiles di Supabase)
+  const name = currentUser?.name || "Pengguna";
+  const phone = currentUser?.phone || "-";
 
   const [editVisible, setEditVisible] = useState(false);
   const [draftName, setDraftName] = useState(name);
   const [draftPhone, setDraftPhone] = useState(phone);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
 
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [dialog, setDialog] = useState<DialogType>(null);
 
   function openEditProfile() {
-    setDraftName(name);
-    setDraftPhone(phone);
+    setDraftName(currentUser?.name ?? "");
+    setDraftPhone(currentUser?.phone ?? "");
+    setEditError("");
     setEditVisible(true);
   }
 
-  function saveProfile() {
+  async function saveProfile() {
+    if (saving) return;
     if (!draftName.trim()) {
-      showMessage("Nama wajib diisi", "Silakan masukkan nama lengkap.");
+      setEditError("Nama wajib diisi.");
       return;
     }
-
     if (!draftPhone.trim()) {
-      showMessage("Nomor HP wajib diisi", "Silakan masukkan nomor HP.");
+      setEditError("Nomor HP wajib diisi.");
       return;
     }
-    updateCurrentUser({ name: draftName.trim(), phone: draftPhone.trim() });
-    setName(draftName.trim());
-    setPhone(draftPhone.trim());
+    setSaving(true);
+    setEditError("");
+    const error = await updateCurrentUser({
+      name: draftName.trim(),
+      phone: draftPhone.trim(),
+    });
+    setSaving(false);
+    if (error) {
+      setEditError(error);
+      return;
+    }
     setEditVisible(false);
-
-    setName(draftName.trim());
-    setPhone(draftPhone.trim());
-    setEditVisible(false);
-    showMessage("Profil diperbarui", "Data profil berhasil diperbarui.");
+    showMessage("Profil diperbarui", "Data profil berhasil disimpan ke database.");
   }
 
   function showMessage(title: string, message: string) {
@@ -79,9 +87,9 @@ export default function ProfileScreen() {
     }
   }
 
-  function confirmLogout() {
+  async function confirmLogout() {
     setDialog(null);
-    signOutLocalAccount();
+    await signOut();
     router.replace("/login");
   }
 
@@ -119,6 +127,9 @@ export default function ProfileScreen() {
 
           <Text style={styles.profileName}>{name}</Text>
           <Text style={styles.profilePhone}>{phone}</Text>
+          {currentUser?.email ? (
+            <Text style={styles.profilePhone}>{currentUser.email}</Text>
+          ) : null}
 
           <View style={styles.memberBadge}>
             <Text style={styles.memberBadgeText}>PELANGGAN BARBERSHOP</Text>
@@ -254,6 +265,12 @@ export default function ProfileScreen() {
               maxLength={20}
             />
 
+            {editError ? (
+              <Text style={{ color: C.red, fontSize: 12, marginTop: 10 }}>
+                {editError}
+              </Text>
+            ) : null}
+
             <View style={styles.modalActions}>
               <Pressable
                 style={styles.secondaryButton}
@@ -262,8 +279,14 @@ export default function ProfileScreen() {
                 <Text style={styles.secondaryText}>Batal</Text>
               </Pressable>
 
-              <Pressable style={styles.primaryButton} onPress={saveProfile}>
-                <Text style={styles.primaryText}>Simpan</Text>
+              <Pressable
+                style={[styles.primaryButton, saving && { opacity: 0.6 }]}
+                onPress={saveProfile}
+                disabled={saving}
+              >
+                <Text style={styles.primaryText}>
+                  {saving ? "Menyimpan..." : "Simpan"}
+                </Text>
               </Pressable>
             </View>
           </View>
