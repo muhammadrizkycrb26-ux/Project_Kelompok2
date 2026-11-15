@@ -18,15 +18,38 @@
 
 3. Skema Tabel Database
 
-<img src="skema_database.png" width="75%" >
+<img src="schema_database.png" width="75%" >
 
 ### Halaman yang sudah Terkoneksi ###
 
 1. Semua Halaman yang ada di Admin
 
-<img src="dokumentasi\supaAdmin.gif" width="50%" >
+<img src="loginadmin.gif" width="50%" >
 
-2. Layanan ( Untuk Menambahkan Layanan )
+2. Halaman Registrasi User
+
+<img src="registrasiakun.gif" width="50%" >
+
+3. Halaman Login User
+
+<img src="loginakun.gif" width="50%" >
+
+---
+
+### Dashboard User atau Pengguna
+
+1. Layanan Booking ( Untuk Menambahkan Layanan Booking )
+
+<img src="booking.gif" width="50%" >
+
+--
+
+2. Layanan Shop ( Untuk Menambahkan Layanan Pembelian barang )
 
 <img src="supalayanan.gif" width="50%" >
 
+--
+
+3. Tampilan Desk. Pesanan & Tampilan Profile ( Untuk Menambahkan Layanan  )
+
+<img src="pesanandanprofil.gif" width="50%" >
