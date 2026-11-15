@@ -1,4 +1,4 @@
-## Integrasi Project My-Mahad Ke Supabase ##
+## Integrasi Project Corte Barbershop Ke Supabase ##
 
 ### Anggota Kelompok ####
 1. Mohammad Rizky Saputra 
