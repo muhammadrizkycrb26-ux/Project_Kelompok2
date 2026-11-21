@@ -13,6 +13,7 @@ import {
 
 import { ProductFormModal, ServiceFormModal } from "@/components/admin-forms";
 import AppText from "@/components/app-text";
+import ForecastSection from "@/components/forecast-section";
 import { signOut, useCurrentUser } from "@/data/auth";
 import {
   addProduct,
@@ -44,10 +45,10 @@ import {
   type OrderStatus,
 } from "@/data/orders-store";
 
-type AdminTab = "Ringkasan" | "Pesanan" | "Produk" | "Layanan";
+type AdminTab = "Ringkasan" | "Pesanan" | "Produk" | "Layanan" | "Prediksi";
 type StatusFilter = "Semua" | OrderStatus;
 
-const TABS: AdminTab[] = ["Ringkasan", "Pesanan", "Produk", "Layanan"];
+const TABS: AdminTab[] = ["Ringkasan", "Pesanan", "Produk", "Layanan", "Prediksi"];
 const STATUS_FILTERS: StatusFilter[] = [
   "Semua",
   "Menunggu Proses",
@@ -575,6 +576,9 @@ export default function AdminDashboardScreen() {
             )}
           </View>
         )}
+
+        {/* ========== PREDIKSI (Fitur AI) ========== */}
+        {tab === "Prediksi" && <ForecastSection />}
       </ScrollView>
 
       {/* Modal form */}
